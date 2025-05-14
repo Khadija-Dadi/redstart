@@ -1,15 +1,14 @@
 cff-version: 1.2.0
 message: "If you use this project, please cite it as below."
 authors:
-- family-name: "DADI"
-  given-name: "Khadija"
-- family-name: "RAHMOUNE"
-  given-name: "Ikhlasse"
-- family-name: "AIT JALLOUL"
-  given-name: "Rachid"
-- family-name: "YOUSFI"
-  given-name: "Abderrahman"
-  orcid: "https://orcid.org/0000-0003-4685-8099"
+- family-names: "DADI"
+  given-names: "Khadija"
+- family-names: "RAHMOUNE"
+  given-names: "Ikhlasse"
+- family-names: "AIT JALLOUL"
+  given-names: "Rachid"
+- family-names: "YOUSFI"
+  given-names: "Abderrahman"
 title: "Redstart"
 version: 0.0.1
 date-released: 2025-05-14
