@@ -232,6 +232,26 @@ def _(mo):
 
 
 @app.cell
+def _(mo):
+    mo.md(
+        r"""
+    \[
+    \begin{pmatrix}
+    f_x \\[6pt]
+    f_y
+    \end{pmatrix}
+    = f
+    \begin{pmatrix}
+    -\sin\bigl(\theta+\Phi\bigr) \\[4pt]
+    \cos\bigl(\theta+\Phi\bigr)
+    \end{pmatrix}.
+    \]
+    """
+    )
+    return
+
+
+@app.cell
 def _(np):
     f = 0
     theta = 0
@@ -251,6 +271,19 @@ def _(mo):
     """
     )
     return
+
+
+app._unparsable_cell(
+    r"""
+    \[
+    \begin{cases}
+    \ddot x = -\dfrac{f}{M}\,\sin(\theta+\varPhi),\\[8pt]
+    \ddot y = \dfrac{f}{M}\,\cos(\theta+\varPhi)\;-\;g.
+    \end{cases}
+    \]
+    """,
+    name="_"
+)
 
 
 @app.cell
@@ -273,6 +306,19 @@ def _(mo):
 
 
 @app.cell
+def _(mo):
+    mo.md(
+        r"""
+
+    \[
+    J = \frac{1}{12} M (2l) ^2 =  \frac{1}{3} M \ell^2
+    \]
+    """
+    )
+    return
+
+
+@app.cell
 def _(M, l):
     J = 1/3* M*l**2
     return (J,)
@@ -288,6 +334,16 @@ def _(mo):
     """
     )
     return
+
+
+app._unparsable_cell(
+    r"""
+    \[
+    \ddot{\theta} = - \frac{3f}{M\ell} \, \sin(\Phi)
+    \]
+    """,
+    name="_"
+)
 
 
 @app.cell
