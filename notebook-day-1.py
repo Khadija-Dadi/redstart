@@ -59,6 +59,7 @@ def _(mo):
 def _():
     import scipy
     import scipy.integrate as sci
+    from scipy.integrate import solve_ivp
     import matplotlib as mpl
     import matplotlib.pyplot as plt
     from matplotlib.animation import FuncAnimation, FFMpegWriter
@@ -69,7 +70,7 @@ def _():
     import autograd.numpy as np
     import autograd.numpy.linalg as la
     from autograd import isinstance, tuple
-    return FFMpegWriter, FuncAnimation, np, plt, tqdm
+    return FFMpegWriter, FuncAnimation, np, plt, solve_ivp, tqdm
 
 
 @app.cell(hide_code=True)
@@ -213,7 +214,7 @@ def _(mo):
 
 @app.cell
 def _():
-    l = 2
+    l = 1
     M = 1
     g = 1
     return M, g, l
@@ -403,13 +404,54 @@ def _(mo):
 
 
 @app.cell
-def _():
-    return
+def _(J, M, g, l, np):
+    def f_fusee (t, y, f_phi):
+            x, dx, y, dy, theta, dtheta = y
+            f , phi = f_phi(t,y)
+
+            fx = -f* np.sin(theta + phi)
+            fy = f * np.cos(theta + phi)
+
+            torque = -f*l*np.sin(phi)
+        
+            d2_x = fx/M
+            d2_y = fy/M - g
+
+            d2_theta = torque/J
+
+            return [dx, d2_x, dy, d2_y, dtheta, d2_theta]
+   
+    return (f_fusee,)
 
 
 @app.cell
-def _():
-    # input [f, phi] (no thrust)
+def _(f_fusee, solve_ivp):
+    def redstart_solve(t_span, y0, f_phi):
+        solution = solve_ivp(
+            fun = lambda t,y : f_fusee(t, y, f_phi),t_span = t_span, y0 =y0, dense_output=True)
+        return solution.sol
+    return (redstart_solve,)
+
+
+@app.cell
+def _(l, np, plt, redstart_solve):
+    def free_fall_example():
+        t_span = [0.0, 5.0]
+        y0 = [0.0, 0.0, 10.0, 0.0, 0.0, 0.0] # state: [x, dx, y, dy, theta, dtheta]
+        def f_phi(t, y):
+            return np.array([0.0, 0.0]) # input [f, phi]
+        sol = redstart_solve(t_span, y0, f_phi)
+        t = np.linspace(t_span[0], t_span[1], 1000)
+        y_t = sol(t)[2]
+        plt.plot(t, y_t, label=r"$y(t)$ (height in meters)")
+        plt.plot(t, l * np.ones_like(t), color="grey", ls="--", label=r"$y=\ell$")
+        plt.title("Free Fall")
+        plt.xlabel("time $t$")
+        plt.grid(True)
+        plt.legend()
+        return plt.gcf()
+    free_fall_example()
+
     return
 
 
