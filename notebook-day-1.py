@@ -437,9 +437,9 @@ def _(f_fusee, solve_ivp):
 def _(l, np, plt, redstart_solve):
     def free_fall_example():
         t_span = [0.0, 5.0]
-        y0 = [0.0, 0.0, 10.0, 0.0, 0.0, 0.0] # state: [x, dx, y, dy, theta, dtheta]
+        y0 = [0.0, 0.0, 10.0, 0.0, 0.0, 0.0] 
         def f_phi(t, y):
-            return np.array([0.0, 0.0]) # input [f, phi]
+            return np.array([0.0, 0.0]) # 
         sol = redstart_solve(t_span, y0, f_phi)
         t = np.linspace(t_span[0], t_span[1], 1000)
         y_t = sol(t)[2]
@@ -466,6 +466,102 @@ def _(mo):
     Simulate the corresponding scenario to check that your solution works as expected.
     """
     )
+    return
+
+
+@app.cell
+def _(np):
+    def find_coefficients(y0, yp0, y5, yp5):
+        A = np.array([
+            [0, 0, 0, 1],    # y(0) = d = y0
+            [0, 0, 1, 0],    # y'(0) = c = y'0
+            [125, 25, 5, 1], # y(5) = 125a + 25b + 5c + d = y5
+            [75, 10, 1, 0]   # y'(5) = 75a + 10b + c = y'5
+        ])
+        B = np.array([y0, yp0, y5, yp5])
+        coeffs = np.linalg.solve(A, B)
+        return coeffs
+    return (find_coefficients,)
+
+
+@app.cell
+def _(find_coefficients, l):
+    a, b, c, d = find_coefficients(10, 0, l, 0)
+
+    return a, b, c, d
+
+
+@app.cell
+def _(M, a, b, c, d, g):
+    def optimal_force_cubic(t):
+        y_ = a*t*3 + b*t*2 + c*t + d
+        dy = 3*a*t**2 + 2*b*t + c
+        d2_y = 6*a*t + 2*b
+    
+        f = M * (d2_y + g)
+        return f
+
+    return (optimal_force_cubic,)
+
+
+@app.cell
+def _(f_fusee, solve_ivp):
+    def redstart(t_span, y0, f_phi):
+        solution = solve_ivp(
+            fun=lambda t, y:f_fusee(t, y, f_phi),
+            t_span=t_span,
+            y0=y0,
+            dense_output=True
+        )
+        return solution.sol
+    return (redstart,)
+
+
+@app.cell
+def _(l, np, optimal_force_cubic, plt, redstart):
+    def optimal_scenario_cubic():
+        t_span = [0.0, 5.0]
+        y0 = [0.0, 0.0, 10.0, 0.0, 0.0, 0.0]  
+    
+        def f_phi_control(t, y):
+            f = optimal_force_cubic(t)
+            return np.array([f, 0.0])  
+    
+        sol = redstart(t_span, y0, f_phi_control)
+    
+        t = np.linspace(t_span[0], t_span[1], 100)
+        y_t = sol(t)
+    
+        plt.figure(figsize=(12, 6))
+    
+        plt.subplot(1, 2, 1)
+        plt.plot(t, y_t[2], label="Hauteur y(t)")
+        plt.axhline(y=l, color='r', linestyle='--', label='y = l')
+        plt.xlabel('Temps (s)')
+        plt.ylabel('Hauteur (m)')
+        plt.title('Trajectoire optimale')
+        plt.grid(True)
+        plt.legend()
+
+        plt.subplot(1, 2, 2)
+        forces = [optimal_force_cubic(ti) for ti in t]
+        plt.plot(t, forces, color='orange', label="Force f(t)")
+        plt.xlabel('Temps (s)')
+        plt.ylabel('Force (N)')
+        plt.title('Profil de poussée')
+        plt.grid(True)
+        plt.legend()
+    
+        plt.tight_layout()
+        plt.show()
+
+        # Vérification des conditions finales
+        y_final = sol(5.0)
+        print(f"Hauteur finale: {y_final[2]:.4f} m (cible: 1 m)")
+        print(f"Vitesse finale: {y_final[3]:.4f} m/s (cible: 0 m/s)")
+
+    # Exécution
+    optimal_scenario_cubic()
     return
 
 
@@ -501,6 +597,61 @@ def _(mo):
     return
 
 
+@app.cell
+def _(np, plt):
+    def draw_booster(x, y, theta, title):
+        fig, ax = plt.subplots(figsize=(8, 6))
+    
+        ax.scatter(0, 0, color='red', s=100, label='Target Landing Zone')
+    
+        body_length = 1.0
+        body_height = 2.0
+    
+        corners = np.array([[-body_length/2, -body_length/2, body_length/2, body_length/2],
+                            [0, body_height, body_height, 0]])
+    
+        rot = np.array([[np.cos(theta), -np.sin(theta)],
+                        [np.sin(theta), np.cos(theta)]])
+    
+        rotated = rot @ corners
+        rotated[0, :] += x
+        rotated[1, :] += y
+    
+        ax.fill(rotated[0, :], rotated[1, :], color='blue', label='Booster Body')
+    
+        flame_length = 0.6
+        flame_height = 1.5
+    
+        flame = np.array([[0, -flame_length/2, flame_length/2],
+                          [-flame_height, 0, 0]])
+    
+        flame_rotated = rot @ flame
+        flame_rotated[0, :] += x
+        flame_rotated[1, :] += y
+    
+        ax.fill(flame_rotated[0, :], flame_rotated[1, :], color='orange', label='Reactor Flame')
+    
+        ax.set_xlim(-5, 5)
+        ax.set_ylim(-2, 12)
+        ax.set_aspect('equal')
+        ax.set_xlabel('Horizontal Position (m)')
+        ax.set_ylabel('Vertical Position (m)')
+        ax.set_title(title)
+        ax.grid(True)
+        ax.legend()
+    
+        plt.show()
+
+    return (draw_booster,)
+
+
+@app.cell
+def _(draw_booster):
+    x, y, theta_2, title = 0, 10, 0, "Booster Visualization"
+    draw_booster(x, y, theta_2, title)
+    return
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(
@@ -520,6 +671,122 @@ def _(mo):
     As an intermediary step, you can begin with production of image snapshots of the booster location (every 1 sec).
     """
     )
+    return
+
+
+@app.cell
+def _(np, plt):
+    from IPython.display import HTML
+    def draw_booster2(x, y, theta, title, ax=None):
+        if ax is None:
+            fig, ax = plt.subplots(figsize=(8, 6))
+    
+        ax.scatter(0, 0, color='red', s=100, label='Target')
+    
+        body_length = 1.0
+        body_height = 2.0
+        corners = np.array([[-body_length/2, -body_length/2, body_length/2, body_length/2],
+                           [0, body_height, body_height, 0]])
+        rot = np.array([[np.cos(theta), -np.sin(theta)],
+                       [np.sin(theta), np.cos(theta)]])
+        rotated = rot @ corners
+        rotated[0, :] += x
+        rotated[1, :] += y
+        ax.fill(rotated[0, :], rotated[1, :], color='blue', label='Booster')
+    
+        flame_length = 0.6
+        flame_height = 1.5
+        flame = np.array([[0, -flame_length/2, flame_length/2],
+                         [-flame_height, 0, 0]])
+        flame_rotated = rot @ flame
+        flame_rotated[0, :] += x
+        flame_rotated[1, :] += y
+        ax.fill(flame_rotated[0, :], flame_rotated[1, :], color='orange', label='Flame')
+    
+        ax.set_xlim(-5, 5)
+        ax.set_ylim(-2, 12)
+        ax.set_aspect('equal')
+        ax.set_title(title)
+        ax.grid(True)
+        ax.legend()
+
+    return HTML, draw_booster2
+
+
+@app.cell
+def _(
+    FFMpegWriter,
+    FuncAnimation,
+    draw_booster2,
+    np,
+    plt,
+    redstart_solve,
+    tqdm,
+):
+    def create_single_video(scenario_dict, output_prefix="booster"):
+        fig = plt.figure(figsize=(10, 6))
+        num_frames = 150
+        fps = 30
+    
+        y0 = [0.0, 0.0, 10.0, 0.0, 0.0, 0.0]
+        sol = redstart_solve((0, 5), y0, scenario_dict["f_phi"])
+    
+        def animate(frame):
+            plt.clf()
+            ax = fig.add_subplot(111)
+            t = 5 * frame / num_frames
+            y_t = sol(t)
+        
+            draw_booster2(y_t[0], y_t[2], y_t[4], 
+                        f"{scenario_dict['name']}\nTime: {t:.2f}s", 
+                        ax=ax)
+        
+            ax.text(0.02, 0.95, 
+                   f"Position: ({y_t[0]:.2f}, {y_t[2]:.2f})\nAngle: {np.degrees(y_t[4]):.1f}°",
+                   transform=ax.transAxes,
+                   bbox=dict(facecolor='white', alpha=0.7))
+    
+        video_file = f"{output_prefix}_{scenario_dict['name'].split()[0]}.mp4"
+    
+        with tqdm(total=num_frames, desc=f"Creating {scenario_dict['name']}") as pbar:
+            anim = FuncAnimation(fig, lambda x: (animate(x), pbar.update(1)), frames=num_frames)
+            writer = FFMpegWriter(fps=fps)
+            anim.save(video_file, writer=writer)
+    
+        plt.close()
+        return video_file
+    return (create_single_video,)
+
+
+@app.cell
+def _(HTML, create_single_video):
+    # Scenario 1
+    video1 = create_single_video(
+        {"name": "1 Free fall", "f_phi": lambda t, y: (0, 0)}
+    )
+    HTML(f'<video controls width="600" src="{video1}"></video>')
+
+    return
+
+
+@app.cell
+def _(HTML, M, create_single_video, g):
+    # Scenario 2
+    video2 = create_single_video(
+        {"name": "2 Vertical thrust", "f_phi": lambda t, y: (M*g, 0)}
+    )
+    HTML(f'<video controls width="600" src="{video2}"></video>')
+    return
+
+
+@app.cell
+def _(HTML, M, create_single_video, g, np):
+
+    # Scenario 3
+    video3 = create_single_video(
+        {"name": "3 Angled thrust", "f_phi": lambda t, y: (M*g, np.pi/8)}
+    )
+    HTML(f'<video controls width="600" src="{video3}"></video>')
     return
 
 
