@@ -59,11 +59,9 @@ def _(mo):
 def _():
     import scipy
     import scipy.integrate as sci
-
     import matplotlib as mpl
     import matplotlib.pyplot as plt
     from matplotlib.animation import FuncAnimation, FFMpegWriter
-
     from tqdm import tqdm
 
     # The use of autograd is optional in this project, but it may come in handy!
@@ -213,6 +211,14 @@ def _(mo):
     return
 
 
+@app.cell
+def _():
+    l = 2
+    M = 1
+    g = 1
+    return M, g, l
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(
@@ -225,6 +231,16 @@ def _(mo):
     return
 
 
+@app.cell
+def _(np):
+    f = 0
+    theta = 0
+    phi = 0
+    fx = -f * np.sin(theta + phi)
+    fy =  f * np.cos(theta + phi) 
+    return f, fx, fy, phi
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(
@@ -234,6 +250,13 @@ def _(mo):
     Give the ordinary differential equation that governs $(x, y)$.
     """
     )
+    return
+
+
+@app.cell
+def _(M, fx, fy, g):
+    d2_x = fx / M
+    d2_y = fy / M - g
     return
 
 
@@ -249,6 +272,12 @@ def _(mo):
     return
 
 
+@app.cell
+def _(M, l):
+    J = 1/3* M*l**2
+    return (J,)
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(
@@ -258,6 +287,18 @@ def _(mo):
     Give the ordinary differential equation that governs the tilt angle $\theta$.
     """
     )
+    return
+
+
+@app.cell
+def _(f, l, np, phi):
+    torque = - f * l * np.sin(phi) # moment de f
+    return (torque,)
+
+
+@app.cell
+def _(J, torque):
+    d2_theta =torque / J
     return
 
 
@@ -302,6 +343,17 @@ def _(mo):
     Test this typical example with your function `redstart_solve` and check that its graphical output makes sense.
     """
     )
+    return
+
+
+@app.cell
+def _():
+    return
+
+
+@app.cell
+def _():
+    # input [f, phi] (no thrust)
     return
 
 
