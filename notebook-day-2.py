@@ -977,6 +977,11 @@ def _(mo):
     \[
     \ddot{y} =0,\phi= 0, \theta = 0 \Rightarrow fcos⁡(0)=Mg \quad \Rightarrow \quad f=Mg
     \]
+
+    ##### Pour les vitesses : 
+    \[\ddot{x} = 0 \Rightarrow \dot{x} = c_1\\
+    \ddot{y} = 0 \Rightarrow \dot{y} = c_2
+    \]
     """
     )
     return
@@ -1037,6 +1042,11 @@ def _(mo):
     Define the corresponding NumPy arrays `A` and `B`.
     """
     )
+    return
+
+
+@app.cell
+def _():
     return
 
 
