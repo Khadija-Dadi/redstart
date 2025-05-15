@@ -1682,93 +1682,16 @@ def _(A_pp, B_pp, place_poles):
     return
 
 
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(
-        r"""
-    ## 🧩 Controller Tuned with Optimal Control
-
-    Using optimal, find a gain matrix $K_{oc}$ that satisfies the same set of requirements that the one defined using pole placement.
-
-    Explain how you find the proper design parameters!
-    """
-    )
-    return
-
-
-@app.cell
-def _(mo):
-    mo.md(
-        r"""
-    L'objectif est de déterminer la matrice de gain \(K_{oc}\) en minimisant le coût quadratique \(J=\int_{0}^{\infty}\Bigl(X^TQX+\Delta\varphi^T R\,\Delta\varphi\Bigr)\,dt\).
-
-    On choisit, selon la règle de Bryson, les pénalités : \(Q=\operatorname{diag}(1,\;25,\;100,\;2500)\) (correspondant à 1 m de position, 0.2 m/s de vitesse, 0.1 rad d’erreur angulaire, 0.02 rad/s de vitesse angulaire) et \(R=1\).
-
-    Avec  
-    \(\;A=\begin{pmatrix}0&1&0&0\\0&0&-1&0\\0&0&0&1\\0&0&0&0\end{pmatrix},\;B=\begin{pmatrix}0\\-1\\0\\-3/\end{pmatrix}\) 
-
-    on calcule  \(\bigl[K_{oc},S,E\bigr]=\mathrm{lqr}(A,B,Q,R)\)  
-    et on obtient  \(\displaystyle K_{oc}\approx\begin{pmatrix}1 & 9.55 & -33.14 & -53.43\end{pmatrix}\),  
-
-    avec valeurs propres de boucle fermée \(\Re(E)\approx\{-0.2,-0.2,-0.2\pm0.1i\}\), ce qui garantit un amortissement critique et un temps de stabilisation d’environ 20 s.
-    """
-    )
-    return
-
-
-@app.cell
-def _(np):
-    from control import lqr
-
-
-    A4 = np.array([[0, 1, 0, 0],
-                   [0, 0, -1, 0],
-                   [0, 0, 0, 1],
-                   [0, 0, 0, 0]])
-
-    B4 = np.array([[0],
-                   [-1],
-                   [0],
-                   [-3]])
-
-    Q = np.diag([1, 25, 100, 2500])
-    R1 = np.array([[1]])
-
-    K_oc, S, E = lqr(A4, B4, Q, R1)
-
-    print("K_oc =\n", K_oc)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(
-        r"""
-    ## 🧩 Validation
-
-    Test the two control strategies (pole placement and optimal control) on the "true" (nonlinear) model and check that they achieve their goal. Otherwise, go back to the drawing board and tweak the design parameters until they do!
-    """
-    )
-    return
-
-
 @app.cell
 def _(M, g, l, np, plt, solve_ivp, theta0_1):
-
-    K = np.array([0.04,        0.30333333, -0.81,       -0.96777778])  
+    K = np.array([0.04,        0.30333333, -0.81,       -0.96777778])  #kpp
 
     def nonlinear_model(t, state):
         x, dx, theta, dtheta = state
-    
-
         phi = -K @ state
-    
-
         f = M * g  
-
         ddx = -f * np.sin(theta + phi) / M
         ddtheta = -3 * g / l * phi
-    
         return [dx, ddx, dtheta, ddtheta]
 
 
@@ -1795,6 +1718,20 @@ def _(M, g, l, np, plt, solve_ivp, theta0_1):
 
     plt.tight_layout()
     plt.show()
+    return t_eval, t_span, x00
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+    ## 🧩 Controller Tuned with Optimal Control
+
+    Using optimal, find a gain matrix $K_{oc}$ that satisfies the same set of requirements that the one defined using pole placement.
+
+    Explain how you find the proper design parameters!
+    """
+    )
     return
 
 
@@ -1802,14 +1739,130 @@ def _(M, g, l, np, plt, solve_ivp, theta0_1):
 def _(mo):
     mo.md(
         r"""
-    La position horizontale \(x(t)\) commence à 0, chute à environ \(-2\ \text{m}\) (effet de la dynamique initiale due à \(\theta(0) = \frac{\pi}{4}\)), puis revient progressivement vers zéro.
+    L'objectif est de déterminer la matrice de gain \(K_{oc}\) en minimisant le coût quadratique \(J=\int_{0}^{\infty}\Bigl(X^TQX+\Delta\varphi^T R\,\Delta\varphi\Bigr)\,dt\).
 
-    Cette trajectoire est cohérente avec un comportement asymptotiquement stable, mais lent : il faut environ 20 secondes pour revenir proche de 0, ce qui respecte l’objectif de retour en environ 20 secondes.
+    On choisit, selon la règle de Bryson, les pénalités : \(Q=\operatorname{diag}(10,\;1,\;10,\;1)\) (correspondant à 1 m de position, 0.2 m/s de vitesse, 0.1 rad d’erreur angulaire, 0.02 rad/s de vitesse angulaire) et \(R=1\).
+
+    Avec  
+    \(\;A=\begin{pmatrix}0&1&0&0\\0&0&-1&0\\0&0&0&1\\0&0&0&0\end{pmatrix},\;B=\begin{pmatrix}0\\-1\\0\\-3\end{pmatrix}\) 
+
+    on calcule  \(\bigl[K_{oc},S,E\bigr]=\mathrm{lqr}(A,B,Q,R)\)  et on obtient  \(\displaystyle K_{oc}\approx\begin{pmatrix} 3.16 & 6.98 & -7.55 & -4.6\end{pmatrix}\) (voir l'éxecution dessous), avec valeurs propres de boucle fermée \(\Re(E)\approx\{-0.2,-0.2,-0.2\pm0.1i\}\), ce qui garantit un amortissement critique et un temps de stabilisation d’environ 20 s.
+    """
+    )
+    return
 
 
-    L’angle \(\theta(t)\), initialement à \(\frac{\pi}{4} \approx 0.785\ \text{rad}\), diminue rapidement (forte pente négative), atteint un minimum (\(\approx -0{,}2\)) et remonte doucement vers 0.
+@app.cell
+def _(np):
+    from control import lqr
 
-    La dynamique est nettement amortie, typique d’un amortissement critique (comme souhaité avec \(\zeta = 1\)). La stabilisation s’effectue bien en moins de 20 secondes, avec une petite oscillation amortie, ce qui confirme le bon comportement du contrôleur.
+
+    A4 = np.array([[0, 1, 0, 0],
+                   [0, 0, -1, 0],
+                   [0, 0, 0, 1],
+                   [0, 0, 0, 0]])
+
+    B4 = np.array([[0],
+                   [-1],
+                   [0],
+                   [-3]])
+
+    Q = np.diag([10, 10, 100, 2000])
+    R1 = np.array([[1]])
+
+    K_oc, S, E = lqr(A4, B4, Q, R1)
+
+    print("K_oc =\n", K_oc)
+    return
+
+
+app._unparsable_cell(
+    r"""
+    Note : nous avons défini initialement les pénalités qui sont dans le markdown. Ce qui est défini dans le code est le choix final après plusieurs itérations.
+    """,
+    name="_"
+)
+
+
+@app.cell
+def _(M, g, l, np, plt, solve_ivp, t_eval, t_span, x00):
+    K2 = np.array([ 3.16227766,  6.98459202, -7.55539691, -4.661717])  #koc pour Q = np.diag([1, 10, 1, 10])
+
+    def nonlinear_model_2(t, state):
+        x, dx, theta, dtheta = state
+        phi = -K2 @ state
+        f = M * g  
+        ddx = -f * np.sin(theta + phi) / M
+        ddtheta = -3 * g / l * phi
+        return [dx, ddx, dtheta, ddtheta]
+
+
+
+    sol2 = solve_ivp(nonlinear_model_2, t_span, x00, t_eval=t_eval)
+
+    plt.figure(figsize=(10, 4))
+    plt.subplot(1, 2, 1)
+    plt.plot(sol2.t, sol2.y[0])
+    plt.xlabel("Temps (s)")
+    plt.ylabel("x(t) [m]")
+    plt.title("Évolution de x(t)")
+    plt.grid()
+
+    plt.subplot(1, 2, 2)
+    plt.plot(sol2.t, sol2.y[2])
+    plt.xlabel("Temps (s)")
+    plt.ylabel("θ(t) [rad]")
+    plt.title("Évolution de θ(t)")
+    plt.grid()
+
+    plt.tight_layout()
+    plt.show()
+    return
+
+
+@app.cell
+def _(M, g, l, np, plt, solve_ivp, t_eval, t_span, x00):
+    K3 = np.array([3.16227766,  16.37310688, -40.80581412, -50.48671804])  #koc pour Q = np.diag([10, 10, 100, 2000]) 
+
+    def nonlinear_model_3(t, state):
+        x, dx, theta, dtheta = state
+        phi = -K3 @ state
+        f = M * g  
+        ddx = -f * np.sin(theta + phi) / M
+        ddtheta = -3 * g / l * phi
+        return [dx, ddx, dtheta, ddtheta]
+
+
+
+    sol3 = solve_ivp(nonlinear_model_3, t_span, x00, t_eval=t_eval)
+
+    plt.figure(figsize=(10, 4))
+    plt.subplot(1, 2, 1)
+    plt.plot(sol3.t, sol3.y[0])
+    plt.xlabel("Temps (s)")
+    plt.ylabel("x(t) [m]")
+    plt.title("Évolution de x(t)")
+    plt.grid()
+
+    plt.subplot(1, 2, 2)
+    plt.plot(sol3.t, sol3.y[2])
+    plt.xlabel("Temps (s)")
+    plt.ylabel("θ(t) [rad]")
+    plt.title("Évolution de θ(t)")
+    plt.grid()
+
+    plt.tight_layout()
+    plt.show()
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+    ## 🧩 Validation
+
+    Test the two control strategies (pole placement and optimal control) on the "true" (nonlinear) model and check that they achieve their goal. Otherwise, go back to the drawing board and tweak the design parameters until they do!
     """
     )
     return
