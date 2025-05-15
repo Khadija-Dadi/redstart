@@ -1309,7 +1309,27 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    mo.md(r"""En chute libre, f=0.""")
+    mo.md(
+        r"""
+    En chute libre (\( f = 0 \)), nous avons l'équation différentielle du modèle linéaire:
+
+    \[
+    \ddot{y}(t) = -g
+    \]
+
+    Ce qui, par intégration, donne :
+
+    \[
+    y(t) = y_0 - \frac{1}{2} g t^2
+    \]
+
+    Quant à l’angle \( \theta(t) \), il n’est soumis à aucun couple, donc il reste constant :
+
+    \[
+    \theta(t) = \theta_0
+    \]
+    """
+    )
     return
 
 
@@ -1339,6 +1359,26 @@ def _(g, np, plt):
     plt.show()
 
     return
+
+
+app._unparsable_cell(
+    r"""
+    Le graphique montre une diminution parabolique de la hauteur en fonction du temps.
+
+    Ceci correspond à l'équation :
+
+    \[
+    y(t) = y_0 - \frac{1}{2}gt^2
+    \]
+
+    L’angle reste constant à 45° pendant toute la simulation.
+
+    Ceci s’explique par le fait qu’avec \( \varphi(t) = 0 \), aucun couple ne s’exerce sur le système.
+
+    En l’absence de couple externe, le moment angulaire est conservé, ce qui implique que l’inclinaison initiale reste inchangée au cours du temps.
+    """,
+    name="_"
+)
 
 
 @app.cell(hide_code=True)
@@ -1388,8 +1428,122 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    mo.md(r""" """)
+    mo.md(
+        r"""
+    On rappelle l'équation linéarisée du système :
+
+    $$
+    \Delta \ddot{\theta} = -\frac{3g}{\ell} \Delta \varphi
+    $$
+
+    On a $K = [0~0~k_3~k_4]^T$, donc :
+
+    $$
+    \Delta \varphi = -k_3 \Delta \theta - k_4 \Delta \dot{\theta}
+    $$
+
+    En remplaçant la loi de contrôle :
+
+    $$
+    \Delta \ddot{\theta} = -\frac{3g}{\ell} \left( -k_3 \Delta \theta - k_4 \Delta \dot{\theta} \right)
+    = \frac{3g}{\ell} k_3 \Delta \theta + \frac{3g}{\ell} k_4 \Delta \dot{\theta}
+    \Rightarrow \Delta \ddot{\theta} + \left( -\frac{3g}{\ell} k_4 \right) \Delta \dot{\theta}
+    + \left( -\frac{3g}{\ell} k_3 \right) \Delta \theta = 0
+    $$
+
+    Il s'agit de l'équation d'un système de second ordre :
+
+    $$
+    \ddot{\theta} + 2\zeta \omega_n \dot{\theta} + \omega_n^2 \theta = 0
+    $$
+
+    Par identification :
+
+    $$
+    -\frac{3g}{\ell} k_4 = 2\zeta \omega_n \quad \text{et} \quad -\frac{3g}{\ell} k_3 = \omega_n^2
+    $$
+
+    D’où :
+
+    $$
+    k_4 = -2\zeta \omega_n \cdot \frac{\ell}{3g}
+    \qquad
+    k_3 = -\omega_n^2 \cdot \frac{\ell}{3g}
+    $$
+
+    Pour une stabilisation en 20 secondes :
+
+    (Nous avons interprété la consigne « stabiliser en 20 secondes environ » comme l’atteinte d’un état où le système est pratiquement revenu à l’équilibre. Pour donner un sens quantitatif à cette exigence, nous avons adopté un critère usuel selon lequel un système est considéré comme stabilisé lorsqu’il atteint 98 % de sa valeur finale, ce qui correspond à une erreur résiduelle de 2 %.)
+
+    Dans le cas d’un système du second ordre à amortissement critique($\zeta = 1$), la réponse temporelle est donnée par :
+
+    $$
+    y(t) = 1 - e^{-t/\tau}\left(1 + \frac{t}{\tau} \right)
+    $$
+
+    À $t = 4\tau$, cette expression donne approximativement $0{,}98$, soit 98 % de la valeur finale.
+
+    En appliquant ce critère à notre exigence de stabilisation en 20 secondes, nous obtenons : $4\tau = 20 \Rightarrow \tau = 5$ s, ce qui conduit à une pulsation propre $\omega_n = \frac{1}{\tau} = 0{,}2$ rad/s.
+
+    Le choix de $\zeta = 1$ (amortissement critique) s’explique par sa capacité à assurer une réponse rapide sans oscillations ni dépassement, ce qui en fait un bon compromis entre rapidité et stabilité.
+
+
+    Donc :
+
+    - $\zeta = 1$
+    - $\omega_n = 0.2$
+
+    Par la suite :
+
+    $$
+    k_4 = -2 \zeta \omega_n \cdot \frac{\ell}{3g}
+    = \frac{-0.4}{3}
+    $$
+
+    $$
+    k_3 = -\omega_n^2 \cdot \frac{\ell}{3g}
+    = \frac{-0.04 }{3}
+    $$
+
+    """
+    )
     return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+    $$
+    s^2 + 2\zeta \omega_n s + \omega_n^2 = 0
+    $$
+
+    En remplaçant $ζ=1$ et $\omega_n=0,2$ on a : 
+
+    $$
+    s^2 + 0{,}4s + 0{,}04 = 0
+    $$
+
+    Les racines sont : 
+
+    $$
+    s = -\zeta \omega_n \pm \omega_n \sqrt{\zeta^2 - 1}
+    $$
+
+    $$
+    s = -0{,}2 \pm 0 \Rightarrow s = -0{,}2
+    $$
+    """
+    )
+    return
+
+
+app._unparsable_cell(
+    r"""
+    Un système est asymptotiquement stable si et seulement si tous ses pôles ont une partie réelle strictement négative. Comme notre système a un pôle double à $s = -0.2$ (qui est négatif), le système en boucle fermée est asymptotiquement stable.
+    """,
+    name="_"
+)
 
 
 @app.cell(hide_code=True)
