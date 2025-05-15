@@ -995,6 +995,38 @@ def _(mo):
     return
 
 
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+    ###### Introduisons les erreurs : 
+    \[ 	\Delta \theta = \theta - 0 = \theta, \quad \theta_{eq} =0 \text{ (voir question précédente)}\\ 
+        \Delta f = f - Mg  \quad f_{eq} =0 \text{ (voir question précédente)}\\
+        \Delta \varphi = \varphi - 0 = \varphi \quad \phi_{eq} =0 \text{ (voir question précédente)} \\	
+        \Delta x = x - x_{eq}\\
+    	\Delta y = y - y_{eq}\\
+    \]
+    ###### On a : 
+    \[
+    M \ddot{x} = -f \sin(\theta + \varphi) \\
+    M\ddot{y} = f \cos(\theta + \varphi) - Mg \\
+    \ddot{\theta} = -\ell f \sin(\varphi) 
+    \]
+    ###### En introduisant les erreurs et en négligeant les termes de second ordre : : 
+    \[
+    \theta + \varphi \approx \Delta \theta + \Delta \varphi \\
+    \sin(\Delta \theta + \Delta \varphi) \approx \Delta \theta + \Delta \varphi \Rightarrow M \ddot{\Delta x} \approx -f (\Delta \theta + \Delta \varphi) \approx -Mg (\Delta \theta + \Delta \varphi) - \Delta f (\Delta \theta + \Delta \varphi) \Rightarrow \textcolor{red}{ M \ddot{\Delta x} = -Mg (\Delta \theta + \Delta \varphi) } \\
+    \cos(\theta + \varphi) \approx 1 - \frac{1}{2}(\Delta \theta + \Delta \varphi)^2 \approx 1  \Rightarrow  \textcolor{red}{M \ddot{\Delta y} = \Delta f}\\
+    \sin(\varphi) \approx \varphi = \Delta \varphi, \quad f \approx Mg \Rightarrow \textcolor{red}{\ddot{\Delta \theta} = -\frac{3g}{\ell} \Delta \varphi }
+    \]
+
+ 
+
+    """
+    )
+    return
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(
