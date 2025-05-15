@@ -71,6 +71,7 @@ def _():
     import autograd.numpy as np
     import autograd.numpy.linalg as la
     from autograd import isinstance, tuple
+    from numpy.linalg import matrix_rank
     return FFMpegWriter, FuncAnimation, mpl, np, plt, scipy, tqdm
 
 
@@ -969,10 +970,12 @@ def _(mo):
     \]
     ##### Ainsi : 
     \[\ddot{\theta} = 0 \Rightarrow \ell f \sin(\varphi) = 0 \quad \Rightarrow \quad \varphi = 0 \]
+    ##### La force doit donc être dirigée le long de l’axe du booster.
     ##### Et : 
     \[
     \ddot{x} =0 \Rightarrow -f \sin(\theta+\phi) = 0 \quad \text{Or}  \quad \phi = 0 \Rightarrow  -f \sin(\theta) = 0   \quad \Rightarrow \quad \theta = 0
     \]
+    ##### Le booster doit donc être parfaitement vertical (aucune force latérale).
     ##### Enfin : 
     \[
     \ddot{y} =0,\phi= 0, \theta = 0 \Rightarrow fcos⁡(0)=Mg \quad \Rightarrow \quad f=Mg
@@ -1021,13 +1024,25 @@ def _(mo):
     ###### En introduisant les erreurs et en négligeant les termes de second ordre : : 
     \[
     \theta + \varphi \approx \Delta \theta + \Delta \varphi \\
-    \sin(\Delta \theta + \Delta \varphi) \approx \Delta \theta + \Delta \varphi \Rightarrow M \ddot{\Delta x} \approx -f (\Delta \theta + \Delta \varphi) \approx -Mg (\Delta \theta + \Delta \varphi) - \Delta f (\Delta \theta + \Delta \varphi) \Rightarrow \textcolor{red}{ M \ddot{\Delta x} = -Mg (\Delta \theta + \Delta \varphi) } \\
-    \cos(\theta + \varphi) \approx 1 - \frac{1}{2}(\Delta \theta + \Delta \varphi)^2 \approx 1  \Rightarrow  \textcolor{red}{M \ddot{\Delta y} = \Delta f}\\
-    \sin(\varphi) \approx \varphi = \Delta \varphi, \quad f \approx Mg \Rightarrow \textcolor{red}{\ddot{\Delta \theta} = -\frac{3g}{\ell} \Delta \varphi }
-    \]
+    \sin(\Delta \theta + \Delta \varphi) \approx \Delta \theta + \Delta \varphi \Rightarrow M \ddot{\Delta x} \approx -f (\Delta \theta + \Delta \varphi) \approx -Mg (\Delta \theta + \Delta \varphi) - \Delta f (\Delta \theta + \Delta \varphi) \Rightarrow M \ddot{\Delta x} = -Mg (\Delta \theta + \Delta \varphi)  \\
+    \cos(\theta + \varphi) \approx 1 - \frac{1}{2}(\Delta \theta + \Delta \varphi)^2 \approx 1  \Rightarrow  M \ddot{\Delta y} = \Delta f\\
+    \sin(\varphi) \approx \varphi = \Delta \varphi, \quad f \approx Mg \Rightarrow \ddot{\Delta \theta} = -\frac{3g}{\ell} \Delta \varphi 
+    \] 
+    """
+    )
+    return
 
- 
 
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+    ##### Enfin : 
+    \[
+    M \ddot{\Delta x} = -Mg (\Delta \theta + \Delta \varphi)  \\
+    M \ddot{\Delta y} = \Delta f\\
+    \ddot{\Delta \theta} = -\frac{3g}{\ell} \Delta \varphi 
+    \] 
     """
     )
     return
