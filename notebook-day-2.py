@@ -72,6 +72,7 @@ def _():
     import autograd.numpy.linalg as la
     from autograd import isinstance, tuple
     from numpy.linalg import matrix_rank
+    from scipy.integrate import solve_ivp
     return FFMpegWriter, FuncAnimation, mpl, np, plt, scipy, tqdm
 
 
@@ -1265,10 +1266,10 @@ def _(mo):
 @app.cell
 def _(g, l, np):
     A_red = np.array([
-        [0, 1,  0,        0],
-        [0, 0, -g,        0],
-        [0, 0,  0,        1],
-        [0, 0,  0,        0]
+        [0, 1, 0, 0],
+        [0, 0, -g, 0],
+        [0, 0, 0, 1],
+        [0, 0, 0, 0]
     ])
 
     B_red = np.array([
@@ -1307,7 +1308,36 @@ def _(mo):
 
 
 @app.cell
-def _():
+def _(mo):
+    mo.md(r"""En chute libre, f=0.""")
+    return
+
+
+@app.cell
+def _(g, np, plt):
+    t_2 = np.linspace(0, 5, 500)
+    y0 = 10.0  
+    theta0 = 45 / 180 * np.pi 
+
+    y_2 = y0 - 0.5 * g * t_2**2
+    theta_2 = theta0 * np.ones_like(t_2)
+
+    fig, axes = plt.subplots(2, 1, figsize=(6, 6), sharex=True)
+
+    axes[0].plot(t_2, y_2, label=r"$y(t) = y_0 - \tfrac{1}{2} g t^2$")
+    axes[0].set_ylabel("y(t) (m)")
+    axes[0].set_title("Evolution of y(t) in Free Fall (f=0)")
+    axes[0].grid(True)
+
+    axes[1].plot(t_2, np.rad2deg(theta_2), label=r"$\theta(t) = \theta_0$", color="orange")
+    axes[1].set_ylabel("θ(t) (degrees)")
+    axes[1].set_xlabel("Time (s)")
+    axes[1].set_title("Evolution of θ(t) in Free Fall (no torque)")
+    axes[1].grid(True)
+
+    plt.tight_layout()
+    plt.show()
+
     return
 
 
