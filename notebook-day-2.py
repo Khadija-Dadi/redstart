@@ -969,11 +969,11 @@ def _(mo):
     \ddot{x} = \ddot{y} = \ddot{\theta} = 0 
     \]
     ##### Ainsi : 
-    \[\ddot{\theta} = 0 \Rightarrow \ell f \sin(\varphi) = 0 \quad \Rightarrow \quad \varphi = 0 \]
+    \[\ddot{\theta} = 0 \Rightarrow \ell f \sin(\varphi) = 0 \quad \Rightarrow \quad \varphi = 0  \quad (\text{puisque } |\varphi| < \frac{\pi}{2})\]
     ##### La force doit donc être dirigée le long de l’axe du booster.
     ##### Et : 
     \[
-    \ddot{x} =0 \Rightarrow -f \sin(\theta+\phi) = 0 \quad \text{Or}  \quad \phi = 0 \Rightarrow  -f \sin(\theta) = 0   \quad \Rightarrow \quad \theta = 0
+    \ddot{x} =0 \Rightarrow -f \sin(\theta+\phi) = 0 \quad \text{Or}  \quad \phi = 0 \Rightarrow  -f \sin(\theta) = 0   \quad \Rightarrow \quad \theta = 0 \quad (\text{puisque } |\theta| < \frac{\pi}{2})
     \]
     ##### Le booster doit donc être parfaitement vertical (aucune force latérale).
     ##### Enfin : 
@@ -983,17 +983,11 @@ def _(mo):
 
     ##### Pour les vitesses : 
     \[
-    \dot{x} = 0\\
-    \dot{y} = 0
+    \dot{x} = 0 \Rightarrow x =x_{eq}\\ 
+    \dot{y} = 0 \Rightarrow y =y_{eq}
     \]
     """
     )
-    return
-
-
-@app.cell
-def _(mo):
-    mo.md(r""" """)
     return
 
 
