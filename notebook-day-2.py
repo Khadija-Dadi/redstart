@@ -979,8 +979,9 @@ def _(mo):
     \]
 
     ##### Pour les vitesses : 
-    \[\ddot{x} = 0 \Rightarrow \dot{x} = c_1\\
-    \ddot{y} = 0 \Rightarrow \dot{y} = c_2
+    \[
+    \dot{x} = 0\\
+    \dot{y} = 0
     \]
     """
     )
@@ -1046,7 +1047,80 @@ def _(mo):
 
 
 @app.cell
-def _():
+def _(mo):
+    mo.md(
+        r"""
+    ##### Nous cherchons à exprimer la dynamique linéarisée sous la forme d’état linéaire standard :
+    \[
+    \dot{\mathbf{x}} = A \mathbf{x} + B \mathbf{u}
+    \]
+    ##### On a : 
+
+
+    \[
+    \mathbf{x} = \begin{bmatrix} 
+    \Delta x \\
+    \dot{\Delta x}\\
+    \Delta y \\ 
+    \dot{\Delta y}\\
+    \Delta \theta \\ 
+    \dot{\Delta \theta} \\
+    \end{bmatrix}
+    \]
+    ##### Et : 
+    \[
+    \mathbf{u} = \begin{bmatrix} 
+    \Delta f \\ 
+    \Delta \varphi 
+    \end{bmatrix}
+    \]
+    ##### Nous avons les équations linéarisées (voir question précédente) : 
+    \[
+    M \ddot{\Delta x} = -Mg (\Delta \theta + \Delta \varphi) \\
+    M \ddot{\Delta y} = \Delta f \\
+    \ddot{\Delta \theta} = -\frac{3g}{\ell} \Delta \varphi
+    \]
+    ##### En premier ordre : 
+    \[
+    \dot{\mathbf{x}} = \begin{bmatrix} 
+    \dot{\Delta x} \\
+    \ddot{\Delta x}\\
+    \dot{\Delta y} \\ 
+    \ddot{\Delta y} \\ 
+    \dot{\Delta \theta} \\ 
+    \ddot{\Delta \theta} 
+    \end{bmatrix}
+    \]
+    ###### Ecrivons le système sous la forme matricielle :
+    \[
+    \dot{\mathbf{x}} = A \mathbf{x} + B \mathbf{u}
+    \]
+    ###### Matrices A et B :
+
+    \[
+    A = \begin{bmatrix} 
+    0 & 1 & 0 & 0 & 0 & 0 \\
+    0 & 0 & 0 & 0 & -g & 0 \\
+    0 & 0 & 0 & 1 & 0 & 0 \\
+    0 & 0 & 0 & 0 & 0 & 0 \\
+    0 & 0 & 0 & 0 & 0 & 1 \\
+    0 & 0 & 0 & 0 & 0 & 0
+    \end{bmatrix}
+    \]
+
+    \[
+    B = \begin{bmatrix} 
+    0 & 0 \\
+    0 & -g \\
+    0 & 0 \\
+    \frac{1}{M} & 0 \\
+    0 & 0 \\
+    0 & -\frac{3g}{\ell}
+    \end{bmatrix}
+    \]
+
+    """
+    )
     return
 
 
@@ -1062,6 +1136,50 @@ def _(mo):
     return
 
 
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+    ##### Le système linéaire est asymptotiquement stable si toutes les valeurs propres de \( A \) ont une partie réelle strictement négative.
+    ##### Calculons les valeurs propres de A : 
+    """
+    )
+    return
+
+
+@app.cell
+def _(M, g, l, np):
+    A = np.zeros((6,6))
+    A[0,1] = 1
+    A[1,4] = -g
+    A[2,3] = 1
+    A[4,5] = 1
+
+    B = np.zeros((6,2))
+    B[1,1] = -g
+    B[3,0] = 1.0/M
+    B[5,1] = -3.0*g/l
+
+    print("A =", A)
+    print("B =", B)
+
+    return (A,)
+
+
+@app.cell
+def _(A, np):
+    eigenvalues = np.linalg.eigvals(A)
+    print("Valeurs propres de A :")
+    print(eigenvalues)
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(r"""Ainsi, l'équilibre n'est pas asymptotiquement stable.""")
+    return
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(
@@ -1069,6 +1187,37 @@ def _(mo):
     ## 🧩 Controllability
 
     Is the linearized model controllable?
+    """
+    )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+    \[
+    \mathcal{C} = [B \ \ AB \ \ A^2B \ \ A^3B \ \ A^4B \ \ A^5B] =
+    \begin{pmatrix}
+    0 & 0 & 0 & \frac{3g^2}{\ell} & 0 & 0 \\
+    0 & -g & 0 & 0 & 0 & 0 \\
+    \frac{1}{M} & 0 & 0 & 0 & 0 & 0 \\
+    0 & 0 & \frac{1}{M} & 0 & 0 & 0 \\
+    0 & -\frac{3g}{\ell} & 0 & 0 & 0 & 0 \\
+    0 & 0 & 0 & 0 & 0 & 0
+    \end{pmatrix}=
+    \begin{pmatrix}
+    0 & 0 & 0 & 3 & 0 & 0 \\
+    0 & -1 & 0 & 0 & 0 & 0 \\
+    1 & 0 & 0 & 0 & 0 & 0 \\
+    0 & 0 & 1 & 0 & 0 & 0 \\
+    0 & -3 & 0 & 0 & 0 & 0 \\
+    0 & 0 & 0 & 0 & 0 & 0
+    \end{pmatrix}
+    \]
+
+
+    $\mathcal{C}$ possède un rang de 4, ce qui signifie qu'elle n'a pas de rang maximal (6). En conséquence, le système est non contrôlable.
     """
     )
     return
@@ -1086,6 +1235,37 @@ def _(mo):
     Check the controllability of this new system.
     """
     )
+    return
+
+
+@app.cell
+def _(g, l, np):
+    A_red = np.array([
+        [0, 1,  0,        0],
+        [0, 0, -g,        0],
+        [0, 0,  0,        1],
+        [0, 0,  0,        0]
+    ])
+
+    B_red = np.array([
+        [0],
+        [-g],
+        [0],
+        [-3*g/l]
+    ])
+
+
+    AB  = A_red.dot(B_red)
+    A2B = A_red.dot(AB)
+    A3B = A_red.dot(A2B)
+    C   = np.hstack([B_red, AB, A2B, A3B])
+    print(C)
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(r"""Le rang de C est 4 donc le système est contrôlable.""")
     return
 
 
