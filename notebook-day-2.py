@@ -73,7 +73,18 @@ def _():
     from autograd import isinstance, tuple
     from numpy.linalg import matrix_rank
     from scipy.integrate import solve_ivp
-    return FFMpegWriter, FuncAnimation, mpl, np, plt, scipy, tqdm
+    from scipy.signal import place_poles
+    return (
+        FFMpegWriter,
+        FuncAnimation,
+        mpl,
+        np,
+        place_poles,
+        plt,
+        scipy,
+        solve_ivp,
+        tqdm,
+    )
 
 
 @app.cell(hide_code=True)
@@ -1028,7 +1039,7 @@ def _(mo):
     \sin(\Delta \theta + \Delta \varphi) \approx \Delta \theta + \Delta \varphi \Rightarrow M \ddot{\Delta x} \approx -f (\Delta \theta + \Delta \varphi) \approx -Mg (\Delta \theta + \Delta \varphi) - \Delta f (\Delta \theta + \Delta \varphi) \Rightarrow M \ddot{\Delta x} = -Mg (\Delta \theta + \Delta \varphi)  \\
     \cos(\theta + \varphi) \approx 1 - \frac{1}{2}(\Delta \theta + \Delta \varphi)^2 \approx 1  \Rightarrow  M \ddot{\Delta y} = \Delta f\\
     \sin(\varphi) \approx \varphi = \Delta \varphi, \quad f \approx Mg \Rightarrow \ddot{\Delta \theta} = -\frac{3g}{\ell} \Delta \varphi 
-    \] 
+    \]
     """
     )
     return
@@ -1043,7 +1054,7 @@ def _(mo):
     M \ddot{\Delta x} = -Mg (\Delta \theta + \Delta \varphi)  \\
     M \ddot{\Delta y} = \Delta f\\
     \ddot{\Delta \theta} = -\frac{3g}{\ell} \Delta \varphi 
-    \] 
+    \]
     """
     )
     return
@@ -1134,7 +1145,6 @@ def _(mo):
     0 & -\frac{3g}{\ell}
     \end{bmatrix}
     \]
-
     """
     )
     return
@@ -1157,7 +1167,7 @@ def _(mo):
     mo.md(
         r"""
     ##### Le système linéaire est asymptotiquement stable si toutes les valeurs propres de \( A \) ont une partie réelle strictement négative.
-    ##### Calculons les valeurs propres de A : 
+    ##### Calculons les valeurs propres de A :
     """
     )
     return
@@ -1311,16 +1321,23 @@ def _(mo):
 def _(mo):
     mo.md(
         r"""
-    En chute libre (\( f = 0 \)), nous avons l'équation différentielle du modèle linéaire:
-
+    Dans le modèle linéarisé, on a 
     \[
-    \ddot{y}(t) = -g
+    \ddot{x}(t) = -g \theta_0 \quad \text{(constante)}
     \]
 
-    Ce qui, par intégration, donne :
+    En intégrant : 
+
+    Vitesse horizontale :
 
     \[
-    y(t) = y_0 - \frac{1}{2} g t^2
+    \dot{x}(t) = \dot{x}_0 - g \theta_0 t
+    \]
+
+    Position horizontale :
+
+    \[
+    x(t) = x_0 + \dot{x}_0 t - \frac{g \theta_0}{2} t^2
     \]
 
     Quant à l’angle \( \theta(t) \), il n’est soumis à aucun couple, donc il reste constant :
@@ -1335,47 +1352,47 @@ def _(mo):
 
 @app.cell
 def _(g, np, plt):
-    t_2 = np.linspace(0, 5, 500)
-    y0 = 10.0  
-    theta0 = 45 / 180 * np.pi 
+    theta0_1 = np.pi / 4 
+    x0_1 = 0
+    dx0_1 = 0
 
-    y_2 = y0 - 0.5 * g * t_2**2
-    theta_2 = theta0 * np.ones_like(t_2)
+    t_3 = np.linspace(0, 5, 500)
 
-    fig, axes = plt.subplots(2, 1, figsize=(6, 6), sharex=True)
+    theta_t = np.full_like(t_3, theta0_1)
 
-    axes[0].plot(t_2, y_2, label=r"$y(t) = y_0 - \tfrac{1}{2} g t^2$")
-    axes[0].set_ylabel("y(t) (m)")
-    axes[0].set_title("Evolution of y(t) in Free Fall (f=0)")
-    axes[0].grid(True)
+    d2_x_1 = -g * theta0_1
+    dx_t = dx0_1 + d2_x_1 * t_3
+    x_t = x0_1 + dx0_1 * t_3 + 0.5 * d2_x_1 * t_3**2
 
-    axes[1].plot(t_2, np.rad2deg(theta_2), label=r"$\theta(t) = \theta_0$", color="orange")
-    axes[1].set_ylabel("θ(t) (degrees)")
-    axes[1].set_xlabel("Time (s)")
-    axes[1].set_title("Evolution of θ(t) in Free Fall (no torque)")
-    axes[1].grid(True)
+
+    plt.figure(figsize=(12, 5))
+
+    plt.subplot(1, 2, 1)
+    plt.plot(t_3, x_t, label=r'$x(t)$')
+    plt.xlabel("Temps (s)")
+    plt.ylabel("Position horizontale x(t)")
+    plt.grid(True)
+    plt.title("Évolution de x(t)")
+    plt.legend()
+
+    plt.subplot(1, 2, 2)
+    plt.plot(t_3, theta_t, label=r'$\theta(t)$', color='orange')
+    plt.xlabel("Temps (s)")
+    plt.ylabel("Angle θ(t) [rad]")
+    plt.grid(True)
+    plt.title("Évolution de θ(t)")
+    plt.legend()
 
     plt.tight_layout()
     plt.show()
-
-    return
+    return (theta0_1,)
 
 
 app._unparsable_cell(
     r"""
-    Le graphique montre une diminution parabolique de la hauteur en fonction du temps.
-
-    Ceci correspond à l'équation :
-
-    \[
-    y(t) = y_0 - \frac{1}{2}gt^2
-    \]
-
-    L’angle reste constant à 45° pendant toute la simulation.
-
-    Ceci s’explique par le fait qu’avec \( \varphi(t) = 0 \), aucun couple ne s’exerce sur le système.
-
-    En l’absence de couple externe, le moment angulaire est conservé, ce qui implique que l’inclinaison initiale reste inchangée au cours du temps.
+    L’angle θ étant constant et non nul, la composante de la gravité selon x est constante.
+    Cela crée une accélération constante dans la direction x, donc x(t) suit une parabole.
+    Le corps tombe avec une inclinaison fixe, ce qui induit une translation horizontale.
     """,
     name="_"
 )
@@ -1504,7 +1521,6 @@ def _(mo):
     k_3 = -\omega_n^2 \cdot \frac{\ell}{3g}
     = \frac{-0.04 }{3}
     $$
-
     """
     )
     return
@@ -1590,7 +1606,79 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    mo.md(r""" """)
+    mo.md(
+        r"""
+    Le système est modélisé par :
+
+    \[
+    A =
+    \begin{bmatrix}
+    0 & 1 & 0 & 0 \\
+    0 & 0 & -1 & 0 \\
+    0 & 0 & 0 & 1 \\
+    0 & 0 & 0 & 0
+    \end{bmatrix}, \quad
+    B =
+    \begin{bmatrix}
+    0 \\
+    -1 \\
+    0 \\
+    -3
+    \end{bmatrix}
+    \]
+
+
+    La  matrice de commandabilité :
+
+    \[
+    \mathcal{C} = [B, AB, A^2B, A^3B]
+    \]
+
+    Et on vérifie que \( \text{rang}(\mathcal{C}) = 4 \) (voir partie 'Lateral Dynamics')
+    Le système est complètement commandable, on peut donc librement placer les pôles.
+
+    On veut que \( \Delta x(t) \to 0 \) en 20s.  
+    La constante de temps est liée à la partie réelle du pôle dominant :
+
+    \[
+    \tau \approx \frac{1}{|\text{Re}(\lambda)|}
+    \quad \Rightarrow \quad
+    |\text{Re}(\lambda)| \geq \frac{1}{20} = 0.05
+    \]
+
+    Pour une convergence plus rapide et de bonnes performances dynamiques, on choisit :
+
+    \[
+     [-0.3, -0.5, -0.8, -1.0]
+    \]
+
+
+    Tous les pôles sont réels, négatifs, distincts :
+    -assurent une bonne vitesse de réponse,
+    -évitent les oscillations,
+    -garantissent la stabilité.
+    """
+    )
+    return
+
+
+@app.cell
+def _(np):
+    A_pp = np.array([
+        [0, 1, 0, 0],
+        [0, 0, -1, 0],
+        [0, 0, 0, 1],
+        [0, 0, 0, 0]
+    ])
+    B_pp = np.array([[0], [-1], [0], [-3]])
+    return A_pp, B_pp
+
+
+@app.cell
+def _(A_pp, B_pp, place_poles):
+    desired_poles = [-0.3, -0.5, -0.8, -1.0]
+    Kpp = place_poles(A_pp, B_pp, desired_poles).gain_matrix
+    print("Kpp =", Kpp)
     return
 
 
@@ -1608,6 +1696,50 @@ def _(mo):
     return
 
 
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+    L'objectif est de déterminer la matrice de gain \(K_{oc}\) en minimisant le coût quadratique \(J=\int_{0}^{\infty}\Bigl(X^TQX+\Delta\varphi^T R\,\Delta\varphi\Bigr)\,dt\).
+
+    On choisit, selon la règle de Bryson, les pénalités : \(Q=\operatorname{diag}(1,\;25,\;100,\;2500)\) (correspondant à 1 m de position, 0.2 m/s de vitesse, 0.1 rad d’erreur angulaire, 0.02 rad/s de vitesse angulaire) et \(R=1\).
+
+    Avec  
+    \(\;A=\begin{pmatrix}0&1&0&0\\0&0&-1&0\\0&0&0&1\\0&0&0&0\end{pmatrix},\;B=\begin{pmatrix}0\\-1\\0\\-3/\end{pmatrix}\) 
+
+    on calcule  \(\bigl[K_{oc},S,E\bigr]=\mathrm{lqr}(A,B,Q,R)\)  
+    et on obtient  \(\displaystyle K_{oc}\approx\begin{pmatrix}1 & 9.55 & -33.14 & -53.43\end{pmatrix}\),  
+
+    avec valeurs propres de boucle fermée \(\Re(E)\approx\{-0.2,-0.2,-0.2\pm0.1i\}\), ce qui garantit un amortissement critique et un temps de stabilisation d’environ 20 s.
+    """
+    )
+    return
+
+
+@app.cell
+def _(np):
+    from control import lqr
+
+
+    A4 = np.array([[0, 1, 0, 0],
+                   [0, 0, -1, 0],
+                   [0, 0, 0, 1],
+                   [0, 0, 0, 0]])
+
+    B4 = np.array([[0],
+                   [-1],
+                   [0],
+                   [-3]])
+
+    Q = np.diag([1, 25, 100, 2500])
+    R1 = np.array([[1]])
+
+    K_oc, S, E = lqr(A4, B4, Q, R1)
+
+    print("K_oc =\n", K_oc)
+    return
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(
@@ -1615,6 +1747,69 @@ def _(mo):
     ## 🧩 Validation
 
     Test the two control strategies (pole placement and optimal control) on the "true" (nonlinear) model and check that they achieve their goal. Otherwise, go back to the drawing board and tweak the design parameters until they do!
+    """
+    )
+    return
+
+
+@app.cell
+def _(M, g, l, np, plt, solve_ivp, theta0_1):
+
+    K = np.array([0.04,        0.30333333, -0.81,       -0.96777778])  
+
+    def nonlinear_model(t, state):
+        x, dx, theta, dtheta = state
+    
+
+        phi = -K @ state
+    
+
+        f = M * g  
+
+        ddx = -f * np.sin(theta + phi) / M
+        ddtheta = -3 * g / l * phi
+    
+        return [dx, ddx, dtheta, ddtheta]
+
+
+    x00 = [0, 0, theta0_1, 0] 
+
+    t_span = (0, 30)
+    t_eval = np.linspace(*t_span, 1000)
+    sol = solve_ivp(nonlinear_model, t_span, x00, t_eval=t_eval)
+
+    plt.figure(figsize=(10, 4))
+    plt.subplot(1, 2, 1)
+    plt.plot(sol.t, sol.y[0])
+    plt.xlabel("Temps (s)")
+    plt.ylabel("x(t) [m]")
+    plt.title("Évolution de x(t)")
+    plt.grid()
+
+    plt.subplot(1, 2, 2)
+    plt.plot(sol.t, sol.y[2])
+    plt.xlabel("Temps (s)")
+    plt.ylabel("θ(t) [rad]")
+    plt.title("Évolution de θ(t)")
+    plt.grid()
+
+    plt.tight_layout()
+    plt.show()
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+    La position horizontale \(x(t)\) commence à 0, chute à environ \(-2\ \text{m}\) (effet de la dynamique initiale due à \(\theta(0) = \frac{\pi}{4}\)), puis revient progressivement vers zéro.
+
+    Cette trajectoire est cohérente avec un comportement asymptotiquement stable, mais lent : il faut environ 20 secondes pour revenir proche de 0, ce qui respecte l’objectif de retour en environ 20 secondes.
+
+
+    L’angle \(\theta(t)\), initialement à \(\frac{\pi}{4} \approx 0.785\ \text{rad}\), diminue rapidement (forte pente négative), atteint un minimum (\(\approx -0{,}2\)) et remonte doucement vers 0.
+
+    La dynamique est nettement amortie, typique d’un amortissement critique (comme souhaité avec \(\zeta = 1\)). La stabilisation s’effectue bien en moins de 20 secondes, avec une petite oscillation amortie, ce qui confirme le bon comportement du contrôleur.
     """
     )
     return
