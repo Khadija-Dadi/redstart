@@ -1232,19 +1232,19 @@ def _(A, B, np):
 
     C1   = np.hstack([B, AB1, A2B1, A3B1,A4B1,A5B1])
     print(C1)
-    return
+    return (C1,)
 
 
 @app.cell
-def _(C, np):
-    r1=np.linalg.matrix_rank(C)
+def _(C1, np):
+    r1=np.linalg.matrix_rank(C1)
     print(r1)
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(r"""Le rang de C est 4<6, ainsi le système n'est contrôlable.""")
+    mo.md(r"""Le rang de C est égale à 6, ainsi le système est contrôlable.""")
     return
 
 
@@ -1285,7 +1285,7 @@ def _(g, l, np):
     A3B = A_red.dot(A2B)
     C   = np.hstack([B_red, AB, A2B, A3B])
     print(C)
-    return (C,)
+    return
 
 
 @app.cell
@@ -1585,6 +1585,12 @@ def _(mo):
     Explain how you find the proper design parameters!
     """
     )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(r""" """)
     return
 
 
