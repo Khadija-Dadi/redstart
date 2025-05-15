@@ -991,6 +991,12 @@ def _(mo):
     return
 
 
+@app.cell
+def _(mo):
+    mo.md(r""" """)
+    return
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(
@@ -1010,8 +1016,8 @@ def _(mo):
         r"""
     ###### Introduisons les erreurs : 
     \[ 	\Delta \theta = \theta - 0 = \theta, \quad \theta_{eq} =0 \text{ (voir question précédente)}\\ 
-        \Delta f = f - Mg  \quad f_{eq} =0 \text{ (voir question précédente)}\\
-        \Delta \varphi = \varphi - 0 = \varphi \quad \phi_{eq} =0 \text{ (voir question précédente)} \\	
+        \Delta f = f - Mg  \quad f_{eq} =Mg \text{ (voir question précédente)}\\
+        \Delta \varphi = \varphi - 0 = \varphi \quad \varphi_{eq} =0 \text{ (voir question précédente)} \\	
         \Delta x = x - x_{eq}\\
     	\Delta y = y - y_{eq}\\
     \]
@@ -1178,7 +1184,7 @@ def _(M, g, l, np):
     print("A =", A)
     print("B =", B)
 
-    return (A,)
+    return A, B
 
 
 @app.cell
@@ -1238,6 +1244,26 @@ def _(mo):
     return
 
 
+@app.cell
+def _(A, B, np):
+    AB1  = A.dot(B)
+    A2B1 = A.dot(AB1)
+    A3B1 = A.dot(A2B1)
+    A4B1 = A.dot(A3B1)
+    A5B1 = A.dot(A4B1)
+
+    C1   = np.hstack([B, AB1, A2B1, A3B1,A4B1,A5B1])
+    print(C1)
+    return
+
+
+@app.cell
+def _(C, np):
+    r1=np.linalg.matrix_rank(C)
+    print(r1)
+    return
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(
@@ -1275,7 +1301,7 @@ def _(g, l, np):
     A3B = A_red.dot(A2B)
     C   = np.hstack([B_red, AB, A2B, A3B])
     print(C)
-    return
+    return (C,)
 
 
 @app.cell
@@ -1294,6 +1320,11 @@ def _(mo):
     $x(0)=0$, $\dot{x}(0)=0$, $\theta(0) = 45 / 180  \times \pi$  and $\dot{\theta}(0) =0$. What do you see? How do you explain it?
     """
     )
+    return
+
+
+@app.cell
+def _():
     return
 
 
@@ -1339,6 +1370,12 @@ def _(mo):
     Is your closed-loop model asymptotically stable?
     """
     )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(r""" """)
     return
 
 
