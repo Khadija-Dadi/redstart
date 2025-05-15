@@ -1211,28 +1211,11 @@ def _(mo):
 def _(mo):
     mo.md(
         r"""
+    ###### Le système est contrôlable si la matrice : 
     \[
-    \mathcal{C} = [B \ \ AB \ \ A^2B \ \ A^3B \ \ A^4B \ \ A^5B] =
-    \begin{pmatrix}
-    0 & 0 & 0 & \frac{3g^2}{\ell} & 0 & 0 \\
-    0 & -g & 0 & 0 & 0 & 0 \\
-    \frac{1}{M} & 0 & 0 & 0 & 0 & 0 \\
-    0 & 0 & \frac{1}{M} & 0 & 0 & 0 \\
-    0 & -\frac{3g}{\ell} & 0 & 0 & 0 & 0 \\
-    0 & 0 & 0 & 0 & 0 & 0
-    \end{pmatrix}=
-    \begin{pmatrix}
-    0 & 0 & 0 & 3 & 0 & 0 \\
-    0 & -1 & 0 & 0 & 0 & 0 \\
-    1 & 0 & 0 & 0 & 0 & 0 \\
-    0 & 0 & 1 & 0 & 0 & 0 \\
-    0 & -3 & 0 & 0 & 0 & 0 \\
-    0 & 0 & 0 & 0 & 0 & 0
-    \end{pmatrix}
+    \mathcal{C} = [B \ \ AB \ \ A^2B \ \ A^3B \ \ A^4B \ \ A^5B] 
     \]
-
-
-    $\mathcal{C}$ possède un rang de 4, ce qui signifie qu'elle n'a pas de rang maximal (6). En conséquence, le système est non contrôlable.
+    ###### est de rang 6.
     """
     )
     return
@@ -1255,6 +1238,12 @@ def _(A, B, np):
 def _(C, np):
     r1=np.linalg.matrix_rank(C)
     print(r1)
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(r"""Le rang de C est 4<6, ainsi le système n'est contrôlable.""")
     return
 
 
