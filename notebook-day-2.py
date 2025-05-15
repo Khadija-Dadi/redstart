@@ -959,6 +959,29 @@ def _(mo):
     return
 
 
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+    ##### A l'équilibre, nous avons : 
+    \[ 
+    \ddot{x} = \ddot{y} = \ddot{\theta} = 0 
+    \]
+    ##### Ainsi : 
+    \[\ddot{\theta} = 0 \Rightarrow \ell f \sin(\varphi) = 0 \quad \Rightarrow \quad \varphi = 0 \]
+    ##### Et : 
+    \[
+    \ddot{x} =0 \Rightarrow -f \sin(\theta+\phi) = 0 \quad \text{Or}  \quad \phi = 0 \Rightarrow  -f \sin(\theta) = 0   \quad \Rightarrow \quad \theta = 0
+    \]
+    ##### Enfin : 
+    \[
+    \ddot{y} =0,\phi= 0, \theta = 0 \Rightarrow fcos⁡(0)=Mg \quad \Rightarrow \quad f=Mg
+    \]
+    """
+    )
+    return
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(
