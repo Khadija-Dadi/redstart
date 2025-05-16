@@ -1995,7 +1995,7 @@ def _(mo):
 
 
 @app.cell
-def _(M, cos_theta, g, l, np):
+def _(M, g, l, np):
     def T(x, dx, y, dy, theta, dtheta, z, dz):
 
         h_x = x - (l / 3) * np.sin(theta)
@@ -2007,12 +2007,12 @@ def _(M, cos_theta, g, l, np):
         d2h_x = (1/M) * np.sin(theta) * z
         d2h_y = -(1/M) * np.cos(theta) * z - g
 
-        d3h_x = (1/M) * (cos_theta * dtheta * z +np.sin(theta) * dz)
+        d3h_x = (1/M) * (np.cos(theta) * dtheta * z +np.sin(theta) * dz)
         d3h_y = (1/M) * (np.sin(theta)* dtheta * z - np.cos(theta)* dz)
 
         return h_x, h_y, dh_x, dh_y, d2h_x, d2h_y, d3h_x, d3h_y
 
-    return
+    return (T,)
 
 
 @app.cell(hide_code=True)
@@ -2140,6 +2140,29 @@ def _(M, g, l, np):
         dy = dh_y + (l / 3) * np.sin(theta) * dtheta
 
         return x, dx, y, dy, theta, dtheta, z, dz
+    return (T_inv,)
+
+
+@app.cell
+def _(T, T_inv, np):
+    def test_inverse():
+        x, dx = 1.0, 0.5
+        y, dy = 2.0, -0.3
+        theta, dtheta = np.pi / 6, 0.2
+        z, dz = -4.0, 0.7
+
+        h = T(x, dx, y, dy, theta, dtheta, z, dz)
+        x2, dx2, y2, dy2, theta2, dtheta2, z2, dz2 = T_inv(*h)
+
+        original = np.array([x, dx, y, dy, theta, dtheta, z, dz])
+        recovered = np.array([x2, dx2, y2, dy2, theta2, dtheta2, z2, dz2])
+        error = np.linalg.norm(original - recovered)
+
+        print("Erreur ||T_inv(T(...)) - Id|| =", error)
+        print("Est-ce que l'identité est bien retrouvée ?", error < 1e-10)
+
+    test_inverse()
+
     return
 
 
@@ -2247,6 +2270,11 @@ def _(M, l, np):
         return fun
 
     return (compute,)
+
+
+@app.cell
+def _():
+    return
 
 
 @app.cell
