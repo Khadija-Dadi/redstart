@@ -2181,6 +2181,77 @@ def _(mo):
     return
 
 
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+    $$
+    v_2 = -\ddot{\theta} z
+    $$
+    """
+    )
+    return
+
+
+@app.cell
+def _(M, g, l, np):
+    def compute(
+        x_0, dx_0,
+        y_0, dy_0,
+        theta_0, dtheta_0,
+        z_0, dz_0,
+        x_tf, dx_tf,
+        y_tf, dy_tf,
+        theta_tf, dtheta_tf,
+        z_tf, dz_tf,
+        tf
+    
+    ):
+        def cubic_coeffs(s0, ds0, sf, dsf, tf):
+            a0 = s0
+            a1 = ds0
+            a2 = (3*(sf - s0) - (2*ds0 + dsf)*tf) / (tf**2)
+            a3 = (2*(s0 - sf) + (ds0 + dsf)*tf) / (tf**3)
+            return a0, a1, a2, a3
+
+        cx = cubic_coeffs(x_0, dx_0, x_tf, dx_tf, tf)
+        cy = cubic_coeffs(y_0, dy_0, y_tf, dy_tf, tf)
+        cth = cubic_coeffs(theta_0, dtheta_0, theta_tf, dtheta_tf, tf)
+        cz = cubic_coeffs(z_0, dz_0, z_tf, dz_tf, tf)
+
+        def fun(t):
+            t = np.clip(t, 0, tf)
+            def eval_cubic(c):
+                a0, a1, a2, a3 = c
+                s = a0 + a1*t + a2*t**2 + a3*t**3
+                ds = a1 + 2*a2*t + 3*a3*t**2
+                d2s = 2*a2 + 6*a3*t
+                return s, ds, d2s
+
+            x, dx, ddx = eval_cubic(cx)
+            y, dy, ddy = eval_cubic(cy)
+            theta, dtheta, ddtheta = eval_cubic(cth)
+            z, dz, ddz = eval_cubic(cz)
+
+            phi = np.arcsin(- (l / (3*g)) * ddtheta)
+            v2 = - z*ddtheta
+            fx = np.sin(theta) * (z - M * l / 3 * dtheta**2) - np.cos(theta) * (M * l / (3 * z) * v2)
+            fy = np.cos(theta) * (z - M * l / 3 * dtheta**2) + np.sin(theta) * (M * l / (3 * z) * v2)
+            f = np.sqrt(fx**2+fy**2)
+            return np.array([x, dx, y, dy, theta, dtheta, z, dz, f, phi])
+
+        return fun
+
+    return (compute,)
+
+
+@app.cell
+def _(compute, np):
+    fun = compute(0,0,0,0,np.pi/4,0, -1,0, 1,0,0,0,np.pi/8,0,-2,0,10)
+    print(fun(5))
+    return
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(
@@ -2196,6 +2267,104 @@ def _(mo):
     Make the graph of the relevant variables as a function of time, then make a video out of the same result. Comment and iterate if necessary!
     """
     )
+    return
+
+
+@app.cell
+def _(M, compute, g, l, np, plt):
+    x_0, dx_0 = 5.0, 0.0
+    y_0, dy_0 = 20.0, -1.0
+    theta_0, dtheta_0 = -np.pi / 8, 0.0
+    z_0, dz_0 = -M * g, 0.0
+
+    x_tf, dx_tf = 0.0, 0.0
+    y_tf, dy_tf = 4 / 3 * l, 0.0
+    theta_tf, dtheta_tf = 0.0, 0.0
+    z_tf, dz_tf = -M * g, 0.0
+    t_span = [0.0, 10.0]
+    tf = t_span[1]
+
+    traj_fun = compute(
+        x_0, dx_0, y_0, dy_0, theta_0, dtheta_0, z_0, dz_0,
+        x_tf, dx_tf, y_tf, dy_tf, theta_tf, dtheta_tf, z_tf, dz_tf,
+        tf
+    )
+
+    t_vals = np.linspace(0, tf, 500)
+    data = np.array([traj_fun(t) for t in t_vals]).T  
+    labels = ['x', 'dx', 'y', 'dy', 'theta', 'dtheta', 'z', 'dz', 'f', 'phi']
+    fig, axs = plt.subplots(len(labels), 1, figsize=(10, 18), sharex=True)
+
+    for i in range(len(labels)):
+        axs[i].plot(t_vals, data[i], label=labels[i])
+        axs[i].legend()
+        axs[i].grid(True)
+    plt.xlabel('Time (s)')
+    plt.tight_layout()
+    plt.show()
+    return
+
+
+@app.cell
+def _(
+    FFMpegWriter,
+    FuncAnimation,
+    M,
+    compute,
+    draw_booster,
+    g,
+    l,
+    mo,
+    np,
+    plt,
+    tqdm,
+):
+    def video_compute_sim():
+        t_span = [0.0, 10.0]
+        tf = t_span[1]
+        fps = 30
+        ts = np.linspace(t_span[0], tf, int(tf * fps) + 1)
+        output = "booster_compute_sim.mp4"
+
+        x_0, dx_0 = 5.0, 0.0
+        y_0, dy_0 = 20.0, -1.0
+        theta_0, dtheta_0 = -np.pi / 8, 0.0
+        z_0, dz_0 = -M * g, 0.0
+
+        x_tf, dx_tf = 0.0, 0.0
+        y_tf, dy_tf = 4 / 3 * l, 0.0
+        theta_tf, dtheta_tf = 0.0, 0.0
+        z_tf, dz_tf = -M * g, 0.0
+
+        fun = compute(
+            x_0, dx_0, y_0, dy_0, theta_0, dtheta_0, z_0, dz_0,
+            x_tf, dx_tf, y_tf, dy_tf, theta_tf, dtheta_tf, z_tf, dz_tf, tf
+        )
+
+        fig = plt.figure(figsize=(10, 6))
+        axes = plt.gca()
+
+        def animate(t):
+            x, dx, y, dy, theta, dtheta, z, dz, f, phi = fun(t)
+            axes.clear()
+            draw_booster(x, y, theta, f, phi, axes=axes)
+            axes.set_xticks([0.0])
+            axes.set_xlim(-10 * l, +10 * l)
+            axes.set_ylim(-4 * l, +24 * l)
+            axes.set_aspect("equal")
+            axes.set_xlabel(rf"$t={t:.1f}$")
+            axes.set_axisbelow(True)
+            axes.grid(True)
+            pbar.update(1)
+
+        pbar = tqdm(total=len(ts), desc="Generating video")
+        anim = FuncAnimation(fig, animate, frames=ts)
+        writer = FFMpegWriter(fps=fps)
+        anim.save(output, writer=writer)
+        pbar.close()
+        print(f"✅ Animation saved as {output!r}")
+        return output
+    mo.video(src=video_compute_sim())
     return
 
 
