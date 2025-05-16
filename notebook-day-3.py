@@ -1706,20 +1706,6 @@ def _(mo):
 
 
 @app.cell
-def _(mo):
-    mo.center(mo.image(src="public/images/Booster.jpg"))
-    return
-
-
-app._unparsable_cell(
-    r"""
-    Note: on s'est servi de cette image pour nous assurer de notre interprétation. 
-    """,
-    name="_"
-)
-
-
-@app.cell
 def _():
     from matplotlib.patches import Rectangle
     from matplotlib.transforms import Affine2D
@@ -1742,7 +1728,7 @@ def _(Affine2D, Rectangle, l, np, plt):
     ax.set_title("Interprétation du point h (en rouge)")
 
     trans = Affine2D().rotate_around(x_b, y_b, theta_b) + ax.transData
-    booster = Rectangle((x_b - e/2, y_b - l/2), e, l,
+    booster = Rectangle((x_b - e/2, y_b - l), e, 2*l,
                         linewidth=2, edgecolor='black', facecolor='lightgray',
                         transform=trans)
     ax.add_patch(booster)
@@ -1768,6 +1754,24 @@ def _(mo):
     ## 🧩 First and Second-Order Derivatives
 
     Compute $\dot{h}$ as a function of $\dot{x}$, $\dot{y}$, $\theta$ and $\dot{\theta}$ (and constants) and then $\ddot{h}$ as a function of $\theta$ and $z$ (and constants) when the auxiliary system is plugged in the booster.
+    """
+    )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+    $$
+    \dot{h} = \begin{bmatrix} \dot{x} - \frac{\ell}{3} \cos\theta \cdot \dot{\theta} \\ \dot{y} - \frac{\ell}{3} \sin\theta \cdot \dot{\theta} \end{bmatrix} 
+    $$
+
+    $$
+    \ddot{h} = \begin{bmatrix} \ddot{x} + \frac{\ell}{3} (\sin\theta \cdot \dot{\theta}^2 - \cos\theta \cdot \ddot{\theta}) \\ \ddot{y} - \frac{\ell}{3} (\cos\theta \cdot \dot{\theta}^2 + \sin\theta \cdot \ddot{\theta}) \end{bmatrix} 
+    $$
+
+    $$
     """
     )
     return
