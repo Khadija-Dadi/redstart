@@ -2186,7 +2186,11 @@ def _(mo):
     mo.md(
         r"""
     $$
-    v_2 = -\ddot{\theta} z
+    v_2 = -\ddot{\theta}
+    $$
+
+    $$
+    \varphi = -\theta -\arctan\left(\frac{f_x}{f_y}\right)
     $$
     """
     )
@@ -2194,7 +2198,7 @@ def _(mo):
 
 
 @app.cell
-def _(M, g, l, np):
+def _(M, l, np):
     def compute(
         x_0, dx_0,
         y_0, dy_0,
@@ -2233,11 +2237,11 @@ def _(M, g, l, np):
             theta, dtheta, ddtheta = eval_cubic(cth)
             z, dz, ddz = eval_cubic(cz)
 
-            phi = np.arcsin(- (l / (3*g)) * ddtheta)
             v2 = - z*ddtheta
             fx = np.sin(theta) * (z - M * l / 3 * dtheta**2) - np.cos(theta) * (M * l / (3 * z) * v2)
             fy = np.cos(theta) * (z - M * l / 3 * dtheta**2) + np.sin(theta) * (M * l / (3 * z) * v2)
             f = np.sqrt(fx**2+fy**2)
+            phi = -theta -np.arctan(fx/fy)
             return np.array([x, dx, y, dy, theta, dtheta, z, dz, f, phi])
 
         return fun
