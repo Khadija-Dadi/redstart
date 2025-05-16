@@ -2273,14 +2273,97 @@ def _(M, l, np):
 
 
 @app.cell
-def _():
+def _(compute, np):
+    fun = compute(0,0,0,0,np.pi/4,0, -1,0, 1,0,0,0,np.pi/8,0,-2,0,10)
+    print(fun(5))
     return
 
 
 @app.cell
-def _(compute, np):
-    fun = compute(0,0,0,0,np.pi/4,0, -1,0, 1,0,0,0,np.pi/8,0,-2,0,10)
-    print(fun(5))
+def _():
+    # Avec T_inv
+    return
+
+
+@app.cell
+def _(M, T_inv, l, np):
+    def compute2(
+        x_0, dx_0, y_0, dy_0, theta_0, dtheta_0, z_0, dz_0,
+        x_tf, dx_tf, y_tf, dy_tf, theta_tf, dtheta_tf, z_tf, dz_tf,
+        tf
+    ):
+        h_x0 = x_0 - (l / 3) * np.sin(theta_0)
+        h_y0 = y_0 + (l / 3) * np.cos(theta_0)
+        dh_x0 = dx_0 - (l / 3) * np.cos(theta_0) * dtheta_0
+        dh_y0 = dy_0 - (l / 3) * np.sin(theta_0) * dtheta_0
+
+        h_xf = x_tf - (l / 3) * np.sin(theta_tf)
+        h_yf = y_tf + (l / 3) * np.cos(theta_tf)
+        dh_xf = dx_tf - (l / 3) * np.cos(theta_tf) * dtheta_tf
+        dh_yf = dy_tf - (l / 3) * np.sin(theta_tf) * dtheta_tf
+
+        def quartic_coeffs(p0, dp0, pf, dpf, tf):
+            A = np.array([
+                [1, 0, 0, 0, 0],
+                [0, 1, 0, 0, 0],
+                [1, tf, tf**2, tf**3, tf**4],
+                [0, 1, 2*tf, 3*tf**2, 4*tf**3],
+                [0, 0, 2, 6*tf, 12*tf**2],
+            ])
+            b = np.array([p0, dp0, pf, dpf, 0])
+            return np.linalg.solve(A, b)
+
+        coeffs_hx = quartic_coeffs(h_x0, dh_x0, h_xf, dh_xf, tf)
+        coeffs_hy = quartic_coeffs(h_y0, dh_y0, h_yf, dh_yf, tf)
+
+        def eval_quartic(c, t):
+            a0, a1, a2, a3, a4 = c
+            h = a0 + a1*t + a2*t**2 + a3*t**3 + a4*t**4
+            dh = a1 + 2*a2*t + 3*a3*t**2 + 4*a4*t**3
+            d2h = 2*a2 + 6*a3*t + 12*a4*t**2
+            d3h = 6*a3 + 24*a4*t
+            d4h = 24*a4
+            return h, dh, d2h, d3h, d4h
+
+        def fun2(t):
+            t = np.clip(t, 0, tf)
+            h_x, dh_x, d2h_x, d3h_x, d4h_x = eval_quartic(coeffs_hx, t)
+            h_y, dh_y, d2h_y, d3h_y, d4h_y = eval_quartic(coeffs_hy, t)
+
+            x, dx, y, dy, theta, dtheta, z, dz = T_inv(
+                h_x, h_y, dh_x, dh_y, d2h_x, d2h_y, d3h_x, d3h_y
+            )
+
+            cos_theta = np.cos(theta)
+            sin_theta = np.sin(theta)
+
+            h4_vec = np.array([d4h_x, d4h_y])
+            R_theta_pi2 = np.array([
+                [cos_theta, sin_theta],
+                [-sin_theta, cos_theta]
+            ])
+            u_vec = M * R_theta_pi2 @ h4_vec  
+            compens = np.array([dtheta**2 * z, -2 * dtheta * dz])
+            v = u_vec - compens
+            v2 = v[1]
+
+            fx = sin_theta * (z - M * l / 3 * dtheta**2) - cos_theta * (M * l / (3 * z) * v2)
+            fy = cos_theta * (z - M * l / 3 * dtheta**2) + sin_theta * (M * l / (3 * z) * v2)
+
+            f = np.sqrt(fx**2 + fy**2)
+            phi = -theta - np.arctan2(fx, fy)
+
+            return np.array([x, dx, y, dy, theta, dtheta, z, dz, f, phi])
+
+        return fun2
+
+    return (compute2,)
+
+
+@app.cell
+def _(compute2, np):
+    fun2 = compute2(0,0,0,0,np.pi/4,0, -1,0, 1,0,0,0,np.pi/8,0,-2,0,10)
+    print(fun2(5))
     return
 
 
@@ -2334,6 +2417,56 @@ def _(M, compute, g, l, np, plt):
     plt.xlabel('Time (s)')
     plt.tight_layout()
     plt.show()
+    return
+
+
+@app.cell
+def _():
+    # Avzc T_inv : 
+    return
+
+
+@app.cell
+def _(M, compute2, g, l, np, plt):
+    def simulate_and_plot_trajectory():
+        x1, dx1 = 5.0, 0.0
+        y1, dy1 = 20.0, -1.0
+        theta1, dtheta1 = -np.pi / 8, 0.0
+        z1, dz1 = -M * g, 0.0
+
+        x2, dx2 = 0.0, 0.0
+        y2, dy2 = 4 / 3 * l, 0.0
+        theta2, dtheta2 = 0.0, 0.0
+        z2, dz2 = -M * g, 0.0
+
+        t_span_plot = [0.0, 10.0]
+        tf_plot = t_span_plot[1]
+
+        traj_fun_plot = compute2(
+            x1, dx1, y1, dy1, theta1, dtheta1, z1, dz1,
+            x2, dx2, y2, dy2, theta2, dtheta2, z2, dz2,
+            tf_plot
+        )
+
+        t_vals_plot = np.linspace(0, tf_plot, 500)
+        data_plot = np.array([traj_fun_plot(t) for t in t_vals_plot]).T
+        labels_plot = ['x', 'dx', 'y', 'dy', 'theta', 'dtheta', 'z', 'dz', 'f', 'phi']
+
+        fig_plot, axs_plot = plt.subplots(len(labels_plot), 1, figsize=(10, 18), sharex=True)
+        for i_plot in range(len(labels_plot)):
+            axs_plot[i_plot].plot(t_vals_plot, data_plot[i_plot], label=labels_plot[i_plot])
+            axs_plot[i_plot].legend()
+            axs_plot[i_plot].grid(True)
+        plt.xlabel('Time (s)')
+        plt.tight_layout()
+        plt.show()
+
+    return (simulate_and_plot_trajectory,)
+
+
+@app.cell
+def _(simulate_and_plot_trajectory):
+    simulate_and_plot_trajectory()
     return
 
 
@@ -2397,6 +2530,75 @@ def _(
         print(f"Animation saved as {output!r}")
         return output
     mo.video(src=video_compute_sim())
+    return
+
+
+@app.cell
+def _():
+    # Avec T_inv
+    return
+
+
+@app.cell
+def _(
+    FFMpegWriter,
+    FuncAnimation,
+    M,
+    compute2,
+    draw_booster,
+    g,
+    l,
+    mo,
+    np,
+    plt,
+    tqdm,
+):
+    def video_compute_sim_2():
+        t_span = [0.0, 10.0]
+        tf = t_span[1]
+        fps = 30
+        ts = np.linspace(t_span[0], tf, int(tf * fps) + 1)
+        output = "booster_compute_sim.mp4"
+
+        x_0, dx_0 = 5.0, 0.0
+        y_0, dy_0 = 20.0, -1.0
+        theta_0, dtheta_0 = -np.pi / 8, 0.0
+        z_0, dz_0 = -M * g, 0.0
+
+        x_tf, dx_tf = 0.0, 0.0
+        y_tf, dy_tf = 4 / 3 * l, 0.0
+        theta_tf, dtheta_tf = 0.0, 0.0
+        z_tf, dz_tf = -M * g, 0.0
+
+        fun = compute2(
+            x_0, dx_0, y_0, dy_0, theta_0, dtheta_0, z_0, dz_0,
+            x_tf, dx_tf, y_tf, dy_tf, theta_tf, dtheta_tf, z_tf, dz_tf, tf
+        )
+
+        fig = plt.figure(figsize=(10, 6))
+        axes = plt.gca()
+
+        def animate2(t):
+            x, dx, y, dy, theta, dtheta, z, dz, f, phi = fun(t)
+            axes.clear()
+            draw_booster(x, y, theta, f, phi, axes=axes)
+            axes.set_xticks([0.0])
+            axes.set_xlim(-10 * l, +10 * l)
+            axes.set_ylim(-4 * l, +24 * l)
+            axes.set_aspect("equal")
+            axes.set_xlabel(rf"$t={t:.1f}$")
+            axes.set_axisbelow(True)
+            axes.grid(True)
+            pbar.update(1)
+
+        pbar = tqdm(total=len(ts), desc="Generating video")
+        anim = FuncAnimation(fig, animate2, frames=ts)
+        writer = FFMpegWriter(fps=fps)
+        anim.save(output, writer=writer)
+        pbar.close()
+        print(f"Animation saved as {output!r}")
+        return output
+    mo.video(src=video_compute_sim_2())
     return
 
 
