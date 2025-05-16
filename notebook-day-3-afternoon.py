@@ -2125,20 +2125,20 @@ def _(mo):
 @app.cell
 def _(M, g, l, np):
     def T_inv(h_x, h_y, dh_x, dh_y, d2h_x, d2h_y, d3h_x, d3h_y):  
-    
+
         theta = np.arctan2(-d2h_x, d2h_y + g)  
-    
+
         z = -M * np.sqrt(d2h_x**2 + (d2h_y + g)**2)
-    
+
         dtheta = (M / z) * (np.cos(theta) * d3h_x + np.sin(theta) * d3h_y)
         dz = M * (np.sin(theta) * d3h_x - np.cos(theta)* d3h_y)
 
         x = h_x + (l / 3) * np.sin(theta)
         y = h_y - (l / 3) * np.cos(theta)
- 
+
         dx = dh_x + (l / 3) * np.cos(theta) * dtheta
         dy = dh_y + (l / 3) * np.sin(theta) * dtheta
-    
+
         return x, dx, y, dy, theta, dtheta, z, dz
     return
 
@@ -2186,7 +2186,7 @@ def _(mo):
     mo.md(
         r"""
     $$
-    v_2 = -\ddot{\theta}
+    v_2 = \ddot{\theta}z
     $$
 
     $$
@@ -2209,7 +2209,7 @@ def _(M, l, np):
         theta_tf, dtheta_tf,
         z_tf, dz_tf,
         tf
-    
+
     ):
         def cubic_coeffs(s0, ds0, sf, dsf, tf):
             a0 = s0
@@ -2237,7 +2237,7 @@ def _(M, l, np):
             theta, dtheta, ddtheta = eval_cubic(cth)
             z, dz, ddz = eval_cubic(cz)
 
-            v2 = - z*ddtheta
+            v2 = z*ddtheta
             fx = np.sin(theta) * (z - M * l / 3 * dtheta**2) - np.cos(theta) * (M * l / (3 * z) * v2)
             fy = np.cos(theta) * (z - M * l / 3 * dtheta**2) + np.sin(theta) * (M * l / (3 * z) * v2)
             f = np.sqrt(fx**2+fy**2)
