@@ -1768,12 +1768,120 @@ def _(mo):
     $$
 
     $$
-    \ddot{h} = \begin{bmatrix} \ddot{x} + \frac{\ell}{3} (\sin\theta \cdot \dot{\theta}^2 - \cos\theta \cdot \ddot{\theta}) \\ \ddot{y} - \frac{\ell}{3} (\cos\theta \cdot \dot{\theta}^2 + \sin\theta \cdot \ddot{\theta}) \end{bmatrix} 
+    \ddot{h} = \begin{bmatrix} \ddot{x} + \frac{\ell}{3} (\sin\theta \cdot \dot{\theta}^2 - \cos\theta \cdot \ddot{\theta}) \\ \ddot{y} - \frac{\ell}{3} (\cos\theta \cdot \dot{\theta}^2 + \sin\theta \cdot \ddot{\theta}) \end{bmatrix} =  \begin{bmatrix} \frac{f_x}{M} + \frac{\ell}{3} (\sin\theta \cdot \dot{\theta}^2 - \cos\theta \cdot \ddot{\theta})\\ \frac{f_y}{M} -g - \frac{\ell}{3} (\cos\theta \cdot \dot{\theta}^2 + \sin\theta \cdot \ddot{\theta}) \end{bmatrix} (1)
     $$
 
+    Exprimons \(\ddot{\theta}\) en appliquant le théorème de moment cinétique en G (centre de masse): 
+
+    $$
+    J\ddot{\theta}= \ell(f_x \cos(\theta) + f_y \sin(\theta))
+    $$
+
+    En posant : 
+
+    $$ 
+    \begin{bmatrix}U_1 \\ U_2 \end{bmatrix}
+    =
+    \begin{bmatrix}
+    z + \frac{m \ell \dot{\theta}^2}{3} \\
+    \frac{m \ell v_2}{3z} 
+    \end{bmatrix}
+    $$
+
+    Nous obtenons après développement des expressions de \((f_x, f_y)\) : 
+
+    $$
+    \begin{bmatrix}
+    f_x \\
+    f_y
+    \end{bmatrix} = \begin{bmatrix}
+    -\sin(\theta) U_1 - \cos(\theta)U_2 \\
+    \cos(\theta) U_1 - \sin(\theta) U_2
+    \end{bmatrix}
+    $$
+
+    Nous obtenons (après simplifications): 
+
+    $$
+    J\ddot{\theta} = -\ell U_2 \Rightarrow \ddot{\theta} = -\frac{v_2}{z} (2)
+    $$
+
+    On a :
+
+    $$
+    \begin{bmatrix}
+    \ddot{x}\\
+    \ddot{y}
+    \end{bmatrix} =
+    \begin{bmatrix}
+    \frac{f_x}{M}\\
+    \frac{f_y}{M}-g 
+    \end{bmatrix} =
+    \begin{bmatrix}
+    \frac{1}{M} (-\cos(\theta) U_2 -\sin(\theta) U_1)  \\
+    \frac{1}{M} (\cos(\theta) U_1 -\sin(\theta) U_2) -g
+    \end{bmatrix} (3)
+    $$
+
+    En substituant par (2) et (3) dans (1), nous obtenons : 
+
+    $$
+    \ddot{h} = \begin{bmatrix}
+    -\frac{\sin(\theta)z}{M} \\
+    \frac{\cos(\theta)z}{M} -g
+    \end{bmatrix}
     $$
     """
     )
+    return
+
+
+@app.cell
+def _():
+    ##### Computation numérique
+    return
+
+
+@app.cell
+def _(np):
+    def h2(x, y, theta, l):
+        h_x = x - (l / 3) * np.sin(theta)
+        h_y = y + (l / 3) * np.cos(theta)
+        return np.array([h_x, h_y])
+    return
+
+
+@app.cell
+def _(np):
+    def dot_h2(dot_x, dot_y, theta, dot_theta, l):
+        dh_x = dot_x - (l / 3) * np.cos(theta) * dot_theta
+        dh_y = dot_y - (l / 3) * np.sin(theta) * dot_theta
+        return np.array([dh_x, dh_y])
+    return
+
+
+@app.function
+def ddot_theta(v2, z):
+    return -v2 / z
+
+
+@app.cell
+def _(l, np):
+    def f_vector(theta, z, m, dot_theta, v2):
+        U1 = z + (m * l * dot_theta**2) / 3
+        U2 = (m * l / 3) * v2 * z
+        fx = -np.sin(theta) * U1 - np.cos(theta) * U2
+        fy =  np.cos(theta) * U1 - np.sin(theta) * U2
+        return fx, fy
+    return
+
+
+@app.cell
+def _(np):
+    def ddot_h2(theta, z, M, g=9.81):
+        ddh_x = -np.sin(theta) * z / M
+        ddh_y =  np.cos(theta) * z / M - g
+        return np.array([ddh_x, ddh_y])
     return
 
 
