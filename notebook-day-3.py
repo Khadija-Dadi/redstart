@@ -1913,13 +1913,13 @@ def _(mo):
     On a : 
 
     $$
-    { \begin{aligned} \ddot{z} &= v_1 \\ \ddot{\theta} &= -\frac{v_2}{z} \end{aligned} } \quad \Rightarrow  \begin{aligned}\ddot{z} &= v_1 \\ \quad \dot{\theta}^2 &= 2 \int \ddot{\theta} \dot{\theta} \, dt = -2 \frac{v_2}{z} \cdot \theta \end{aligned}
+    { \begin{aligned} \ddot{z} &= v_1 \\ \ddot{\theta} &= -\frac{v_2}{z} \end{aligned} }
     $$
 
     En substituant, on obtient : 
 
     $$
-     h^{(4)} = \frac{1}{M} \begin{bmatrix} -2 \sin\theta \cdot v_2 \cdot \theta + \cos\theta \cdot v_2 - 2 \cos\theta \cdot \dot{\theta} \cdot \dot{z} - \sin\theta \cdot v_1 \\ 2 \cos\theta \cdot v_2 \cdot \theta + \sin\theta \cdot v_2 - 2 \sin\theta \cdot \dot{\theta} \cdot \dot{z} + \cos\theta \cdot v_1 \end{bmatrix} 
+     h^{(4)} = \frac{1}{M} \begin{bmatrix} \sin\theta \cdot \dot{\theta}^2 z + \cos\theta \cdot v_2 - 2 \cos\theta \cdot \dot{\theta} \cdot \dot{z} - \sin\theta \cdot v_1 \\ - \cos\theta \cdot \dot{\theta}^2 z + \sin\theta \cdot v_2 - 2 \sin\theta \cdot \dot{\theta} \cdot \dot{z} + \cos\theta \cdot v_1 \end{bmatrix} 
     $$
     """
     )
