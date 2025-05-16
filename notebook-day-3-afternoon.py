@@ -2030,6 +2030,119 @@ def _(mo):
     return
 
 
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+    $$
+    h = \begin{bmatrix} x - (\ell/3)\sin\theta \\ y + (\ell/3)\cos\theta \end{bmatrix} \quad \Rightarrow \quad \begin{cases} x = h_x + (\ell/3)\sin\theta \\ y = h_y - (\ell/3)\cos\theta \end{cases} 
+    $$
+    """
+    )
+    return
+
+
+app._unparsable_cell(
+    r"""
+    $$
+    \dot{h} = \begin{bmatrix} \dot{x} - (\ell/3)\cos\theta\, \dot{\theta} \\ \dot{y} - (\ell/3)\sin\theta\, \dot{\theta} \end{bmatrix} \quad \Rightarrow \quad \begin{cases} \dot{x} = \dot{h}_x + (\ell/3)\cos\theta\, \dot{\theta} \\ \dot{y} = \dot{h}_y + (\ell/3)\sin\theta\, \dot{\theta} \end{cases} 
+    $$
+    """,
+    name="_"
+)
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+    $$
+    \ddot{h} = \frac{1}{M} \begin{bmatrix} \sin \theta \\ -\cos \theta \end{bmatrix} z - \begin{bmatrix} 0 \\ g \end{bmatrix}
+    $$
+
+    On a : 
+
+    $$
+    \ddot{h_x} ^2 +(\ddot{h_y}+g)^2 = \left(\frac{z}{g}\right)^2 \Rightarrow z = -M\sqrt{(\ddot{h_x})^2 + (\ddot{h_y}+g)^2}
+    $$
+
+    On calcule \( \theta \) également : 
+
+    $$
+    \begin{cases}
+    M\ddot{h_x} = \sin(\theta)z  \\
+    -M(\ddot{h_y} + g ) = \cos(\theta) z
+    \end{cases}
+    \Rightarrow 
+    \tan(\theta) = \frac{-\ddot{h_x}}{\ddot{h_y} + g}
+    \Rightarrow 
+    \theta = \arctan\left(\frac{-\ddot{h_x}}{\ddot{h_y} + g}\right)
+    $$
+    """
+    )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+    $$
+    h^{(3)} = \frac{1}{M} \begin{bmatrix} \cos \theta \\ \sin \theta \end{bmatrix} \dot{\theta} z + \frac{1}{M} \begin{bmatrix} \sin \theta \\ -\cos \theta \end{bmatrix} \dot{z} 
+    $$
+
+    On a : 
+
+    $$
+    \cos(\theta) h_x^{(3)} = \cos(\theta)\frac{1}{M} \left(\cos(\theta)\dot{\theta}z +\sin(\theta)\dot{z} \right) \quad (1)\\
+    \sin(\theta)h_y^{(3)} = \sin(\theta)\frac{1}{M} \left(\sin(\theta)\dot{\theta}z -\cos(\theta)\dot{z} \right)  \quad (2)
+    $$
+
+    En additionnant (1) et (2), on obtient : 
+
+    $$
+    \dot{\theta} =\frac{M}{z} (\cos(\theta) h_x^{(3)} +\sin(\theta) h_y^{(3)})
+    $$
+
+    On a : 
+
+    $$
+    \sin(\theta) h_x^{(3)} = \sin(\theta)\frac{1}{M} \left(\cos(\theta)\dot{\theta}z +\sin(\theta)\dot{z} \right) \quad (3)\\
+    \cos(\theta)h_y^{(3)} = \cos(\theta)\frac{1}{M} \left(\sin(\theta)\dot{\theta}z -\cos(\theta)\dot{z} \right)  \quad (4)
+    $$
+
+
+    En soustrayant (4) de (3), on obtient: 
+
+    $$
+    \dot{z} = M\left(\sin(\theta)h_x^{(3)} -\cos(\theta) h_y^{(3)} \right)
+    $$
+    """
+    )
+    return
+
+
+@app.cell
+def _(M, g, l, np):
+    def T_inv(h_x, h_y, dh_x, dh_y, d2h_x, d2h_y, d3h_x, d3h_y):  
+    
+        theta = np.arctan2(-d2h_x, d2h_y + g)  
+    
+        z = -M * np.sqrt(d2h_x**2 + (d2h_y + g)**2)
+    
+        dtheta = (M / z) * (np.cos(theta) * d3h_x + np.sin(theta) * d3h_y)
+        dz = M * (np.sin(theta) * d3h_x - np.cos(theta)* d3h_y)
+
+        x = h_x + (l / 3) * np.sin(theta)
+        y = h_y - (l / 3) * np.cos(theta)
+ 
+        dx = dh_x + (l / 3) * np.cos(theta) * dtheta
+        dy = dh_y + (l / 3) * np.sin(theta) * dtheta
+    
+        return x, dx, y, dy, theta, dtheta, z, dz
+    return
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(
