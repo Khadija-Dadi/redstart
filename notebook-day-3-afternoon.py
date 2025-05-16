@@ -2362,7 +2362,7 @@ def _(
         writer = FFMpegWriter(fps=fps)
         anim.save(output, writer=writer)
         pbar.close()
-        print(f"✅ Animation saved as {output!r}")
+        print(f"Animation saved as {output!r}")
         return output
     mo.video(src=video_compute_sim())
     return
