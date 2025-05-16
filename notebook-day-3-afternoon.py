@@ -2260,7 +2260,7 @@ def _(M, l, np):
             theta, dtheta, ddtheta = eval_cubic(cth)
             z, dz, ddz = eval_cubic(cz)
 
-            v2 = -z*ddtheta
+            v2 = z*ddtheta
             fx = np.sin(theta) * (z - M * l / 3 * dtheta**2) - np.cos(theta) * (M * l / (3 * z) * v2)
             fy = np.cos(theta) * (z - M * l / 3 * dtheta**2) + np.sin(theta) * (M * l / (3 * z) * v2)
             f = np.sqrt(fx**2+fy**2)
@@ -2329,12 +2329,6 @@ def _(M, compute, g, l, np, plt):
     plt.xlabel('Time (s)')
     plt.tight_layout()
     plt.show()
-    return
-
-
-@app.cell
-def _():
-    # Les plots avec T_inv
     return
 
 
