@@ -2260,7 +2260,7 @@ def _(M, l, np):
             theta, dtheta, ddtheta = eval_cubic(cth)
             z, dz, ddz = eval_cubic(cz)
 
-            v2 = z*ddtheta
+            v2 = -z*ddtheta
             fx = np.sin(theta) * (z - M * l / 3 * dtheta**2) - np.cos(theta) * (M * l / (3 * z) * v2)
             fy = np.cos(theta) * (z - M * l / 3 * dtheta**2) + np.sin(theta) * (M * l / (3 * z) * v2)
             f = np.sqrt(fx**2+fy**2)
@@ -2279,9 +2279,131 @@ def _(compute, np):
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+    ## 🧩 Graphical Validation
+
+    Test your `compute` function with
+
+      - `x_0, dx_0, y_0, dy_0, theta_0, dtheta_0, z_0, dz_0 = 5.0, 0.0, 20.0, -1.0, -np.pi/8, 0.0, -M*g, 0.0`,
+      - `x_tf, dx_tf, y_tf, dy_tf, theta_tf, dtheta_tf, z_tf, dz_tf = 0.0, 0.0, 4/3*l, 0.0,     0.0, 0.0, -M*g, 0.0`,
+      - `tf = 10.0`.
+
+    Make the graph of the relevant variables as a function of time, then make a video out of the same result. Comment and iterate if necessary!
+    """
+    )
+    return
+
+
+@app.cell
+def _(M, compute, g, l, np, plt):
+    x_0, dx_0 = 5.0, 0.0
+    y_0, dy_0 = 20.0, -1.0
+    theta_0, dtheta_0 = -np.pi / 8, 0.0
+    z_0, dz_0 = -M * g, 0.0
+
+    x_tf, dx_tf = 0.0, 0.0
+    y_tf, dy_tf = 4 / 3 * l, 0.0
+    theta_tf, dtheta_tf = 0.0, 0.0
+    z_tf, dz_tf = -M * g, 0.0
+    t_span = [0.0, 10.0]
+    tf = t_span[1]
+
+    traj_fun = compute(
+        x_0, dx_0, y_0, dy_0, theta_0, dtheta_0, z_0, dz_0,
+        x_tf, dx_tf, y_tf, dy_tf, theta_tf, dtheta_tf, z_tf, dz_tf,
+        tf
+    )
+
+    t_vals = np.linspace(0, tf, 500)
+    data = np.array([traj_fun(t) for t in t_vals]).T  
+    labels = ['x', 'dx', 'y', 'dy', 'theta', 'dtheta', 'z', 'dz', 'f', 'phi']
+    fig, axs = plt.subplots(len(labels), 1, figsize=(10, 18), sharex=True)
+
+    for i in range(len(labels)):
+        axs[i].plot(t_vals, data[i], label=labels[i])
+        axs[i].legend()
+        axs[i].grid(True)
+    plt.xlabel('Time (s)')
+    plt.tight_layout()
+    plt.show()
+    return
+
+
 @app.cell
 def _():
-    # Avec T_inv
+    # Les plots avec T_inv
+    return
+
+
+@app.cell
+def _(
+    FFMpegWriter,
+    FuncAnimation,
+    M,
+    compute,
+    draw_booster,
+    g,
+    l,
+    mo,
+    np,
+    plt,
+    tqdm,
+):
+    def video_compute_sim():
+        t_span = [0.0, 10.0]
+        tf = t_span[1]
+        fps = 30
+        ts = np.linspace(t_span[0], tf, int(tf * fps) + 1)
+        output = "booster_compute_sim.mp4"
+
+        x_0, dx_0 = 5.0, 0.0
+        y_0, dy_0 = 20.0, -1.0
+        theta_0, dtheta_0 = -np.pi / 8, 0.0
+        z_0, dz_0 = -M * g, 0.0
+
+        x_tf, dx_tf = 0.0, 0.0
+        y_tf, dy_tf = 4 / 3 * l, 0.0
+        theta_tf, dtheta_tf = 0.0, 0.0
+        z_tf, dz_tf = -M * g, 0.0
+
+        fun = compute(
+            x_0, dx_0, y_0, dy_0, theta_0, dtheta_0, z_0, dz_0,
+            x_tf, dx_tf, y_tf, dy_tf, theta_tf, dtheta_tf, z_tf, dz_tf, tf
+        )
+        print(fun)
+        fig = plt.figure(figsize=(10, 6))
+        axes = plt.gca()
+
+        def animate(t):
+            x, dx, y, dy, theta, dtheta, z, dz, f, phi = fun(t)
+            axes.clear()
+            draw_booster(x, y, theta, f, phi, axes=axes)
+            axes.set_xticks([0.0])
+            axes.set_xlim(-10 * l, +10 * l)
+            axes.set_ylim(-4 * l, +24 * l)
+            axes.set_aspect("equal")
+            axes.set_xlabel(rf"$t={t:.1f}$")
+            axes.set_axisbelow(True)
+            axes.grid(True)
+            pbar.update(1)
+
+        pbar = tqdm(total=len(ts), desc="Generating video")
+        anim = FuncAnimation(fig, animate, frames=ts)
+        writer = FFMpegWriter(fps=fps)
+        anim.save(output, writer=writer)
+        pbar.close()
+        print(f"Animation saved as {output!r}")
+        return output
+    mo.video(src=video_compute_sim())
+    return
+
+
+@app.cell
+def _():
+    ### Approche avec T_inv
     return
 
 
@@ -2367,65 +2489,6 @@ def _(compute2, np):
     return
 
 
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(
-        r"""
-    ## 🧩 Graphical Validation
-
-    Test your `compute` function with
-
-      - `x_0, dx_0, y_0, dy_0, theta_0, dtheta_0, z_0, dz_0 = 5.0, 0.0, 20.0, -1.0, -np.pi/8, 0.0, -M*g, 0.0`,
-      - `x_tf, dx_tf, y_tf, dy_tf, theta_tf, dtheta_tf, z_tf, dz_tf = 0.0, 0.0, 4/3*l, 0.0,     0.0, 0.0, -M*g, 0.0`,
-      - `tf = 10.0`.
-
-    Make the graph of the relevant variables as a function of time, then make a video out of the same result. Comment and iterate if necessary!
-    """
-    )
-    return
-
-
-@app.cell
-def _(M, compute, g, l, np, plt):
-    x_0, dx_0 = 5.0, 0.0
-    y_0, dy_0 = 20.0, -1.0
-    theta_0, dtheta_0 = -np.pi / 8, 0.0
-    z_0, dz_0 = -M * g, 0.0
-
-    x_tf, dx_tf = 0.0, 0.0
-    y_tf, dy_tf = 4 / 3 * l, 0.0
-    theta_tf, dtheta_tf = 0.0, 0.0
-    z_tf, dz_tf = -M * g, 0.0
-    t_span = [0.0, 10.0]
-    tf = t_span[1]
-
-    traj_fun = compute(
-        x_0, dx_0, y_0, dy_0, theta_0, dtheta_0, z_0, dz_0,
-        x_tf, dx_tf, y_tf, dy_tf, theta_tf, dtheta_tf, z_tf, dz_tf,
-        tf
-    )
-
-    t_vals = np.linspace(0, tf, 500)
-    data = np.array([traj_fun(t) for t in t_vals]).T  
-    labels = ['x', 'dx', 'y', 'dy', 'theta', 'dtheta', 'z', 'dz', 'f', 'phi']
-    fig, axs = plt.subplots(len(labels), 1, figsize=(10, 18), sharex=True)
-
-    for i in range(len(labels)):
-        axs[i].plot(t_vals, data[i], label=labels[i])
-        axs[i].legend()
-        axs[i].grid(True)
-    plt.xlabel('Time (s)')
-    plt.tight_layout()
-    plt.show()
-    return
-
-
-@app.cell
-def _():
-    # Avzc T_inv : 
-    return
-
-
 @app.cell
 def _(M, compute2, g, l, np, plt):
     def simulate_and_plot_trajectory():
@@ -2460,82 +2523,7 @@ def _(M, compute2, g, l, np, plt):
         plt.xlabel('Time (s)')
         plt.tight_layout()
         plt.show()
-
-    return (simulate_and_plot_trajectory,)
-
-
-@app.cell
-def _(simulate_and_plot_trajectory):
     simulate_and_plot_trajectory()
-    return
-
-
-@app.cell
-def _(
-    FFMpegWriter,
-    FuncAnimation,
-    M,
-    compute,
-    draw_booster,
-    g,
-    l,
-    mo,
-    np,
-    plt,
-    tqdm,
-):
-    def video_compute_sim():
-        t_span = [0.0, 10.0]
-        tf = t_span[1]
-        fps = 30
-        ts = np.linspace(t_span[0], tf, int(tf * fps) + 1)
-        output = "booster_compute_sim.mp4"
-
-        x_0, dx_0 = 5.0, 0.0
-        y_0, dy_0 = 20.0, -1.0
-        theta_0, dtheta_0 = -np.pi / 8, 0.0
-        z_0, dz_0 = -M * g, 0.0
-
-        x_tf, dx_tf = 0.0, 0.0
-        y_tf, dy_tf = 4 / 3 * l, 0.0
-        theta_tf, dtheta_tf = 0.0, 0.0
-        z_tf, dz_tf = -M * g, 0.0
-
-        fun = compute(
-            x_0, dx_0, y_0, dy_0, theta_0, dtheta_0, z_0, dz_0,
-            x_tf, dx_tf, y_tf, dy_tf, theta_tf, dtheta_tf, z_tf, dz_tf, tf
-        )
-
-        fig = plt.figure(figsize=(10, 6))
-        axes = plt.gca()
-
-        def animate(t):
-            x, dx, y, dy, theta, dtheta, z, dz, f, phi = fun(t)
-            axes.clear()
-            draw_booster(x, y, theta, f, phi, axes=axes)
-            axes.set_xticks([0.0])
-            axes.set_xlim(-10 * l, +10 * l)
-            axes.set_ylim(-4 * l, +24 * l)
-            axes.set_aspect("equal")
-            axes.set_xlabel(rf"$t={t:.1f}$")
-            axes.set_axisbelow(True)
-            axes.grid(True)
-            pbar.update(1)
-
-        pbar = tqdm(total=len(ts), desc="Generating video")
-        anim = FuncAnimation(fig, animate, frames=ts)
-        writer = FFMpegWriter(fps=fps)
-        anim.save(output, writer=writer)
-        pbar.close()
-        print(f"Animation saved as {output!r}")
-        return output
-    mo.video(src=video_compute_sim())
-    return
-
-
-@app.cell
-def _():
-    # Avec T_inv
     return
 
 
@@ -2574,7 +2562,7 @@ def _(
             x_0, dx_0, y_0, dy_0, theta_0, dtheta_0, z_0, dz_0,
             x_tf, dx_tf, y_tf, dy_tf, theta_tf, dtheta_tf, z_tf, dz_tf, tf
         )
-
+        print(fun)
         fig = plt.figure(figsize=(10, 6))
         axes = plt.gca()
 
