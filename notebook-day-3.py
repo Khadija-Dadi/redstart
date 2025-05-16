@@ -1681,6 +1681,86 @@ def _(mo):
     return
 
 
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+    (x,y) sont les coordonnées du centre de masse du booster. En considérant le vecteur directeur de l 'axe du booster \(u_\theta = (-\sin(\theta), \cos(\theta)) \). 
+
+    Donc le terme \( \begin{bmatrix}
+     - (\ell/3) \sin \theta \\
+     (\ell/3) \cos \theta
+    \end{bmatrix} = \frac{\ell}{3} u_\theta \)
+    est un vecteur  de norme \(\ell/3\) dans la direction de l'axe du booster.
+
+    Donc \( h = \begin{bmatrix}
+     x \\
+    y
+    \end{bmatrix} +\begin{bmatrix}
+     - (\ell/3) \sin \theta \\
+     (\ell/3) \cos \theta
+    \end{bmatrix} \) est un point situé à une distance \(\ell/3\) du centre de masse  dans la direction du booster. 
+    """
+    )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.center(mo.image(src="public/images/Booster.jpg"))
+    return
+
+
+app._unparsable_cell(
+    r"""
+    Note: on s'est servi de cette image pour nous assurer de notre interprétation. 
+    """,
+    name="_"
+)
+
+
+@app.cell
+def _():
+    from matplotlib.patches import Rectangle
+    from matplotlib.transforms import Affine2D
+    return Affine2D, Rectangle
+
+
+@app.cell
+def _(Affine2D, Rectangle, l, np, plt):
+    x_b, y_b = 0, 0  
+    theta_b = np.radians(30) 
+    e = 0.5
+    u_theta = np.array([-np.sin(theta_b), np.cos(theta_b)])
+
+    h = np.array([x_b, y_b]) + (l / 3) * u_theta
+
+    fig, ax = plt.subplots()
+    ax.set_aspect('equal')
+    ax.set_xlim(-1, 1)
+    ax.set_ylim(-1, 1)
+    ax.set_title("Interprétation du point h (en rouge)")
+
+    trans = Affine2D().rotate_around(x_b, y_b, theta_b) + ax.transData
+    booster = Rectangle((x_b - e/2, y_b - l/2), e, l,
+                        linewidth=2, edgecolor='black', facecolor='lightgray',
+                        transform=trans)
+    ax.add_patch(booster)
+
+    ax.plot(x_b, y_b, 'bo', label='Centre (x, y)')
+
+    ax.plot(h[0], h[1], 'ro', label='Point h')
+
+    ax.arrow(x_b, y_b, u_theta[0], u_theta[1], head_width=0.1, head_length=0.2,
+             fc='gray', ec='gray', linestyle='dotted', label='Direction $u_\\theta$')
+
+    ax.legend()
+    plt.grid(True)
+    plt.show()
+
+    return
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(
